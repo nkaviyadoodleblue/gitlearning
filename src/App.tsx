@@ -8,27 +8,50 @@ import NotFound from "./pages/NotFound";
 
 import { store } from './store'
 import { Provider } from 'react-redux'
+import { LoginForm } from "./components/LoginForm";
+import { PatientList } from "./components/PatientList";
+import { PatientDetailedInfo } from "./components/PatientDetailedInfo";
+import { BalanceReductionManagement } from "./components/BalanceReductionManagement";
+import { Dashboard } from "./components/Dashboard";
+import { Reports } from "./components/Reports";
+import Protected from "./components/Protected";
+import { useAppSelector } from "./hooks/use-selector";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
 
-  <QueryClientProvider client={queryClient}>
-    <Provider store={store}>
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
 
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </Provider>
-  </QueryClientProvider>
-);
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/login" element={<LoginForm />} />
+              <Route element={<Protected />}>
+                <Route path="/" element={<Dashboard />} />
+
+
+                <Route path="/patients" element={<PatientList />} />
+
+                <Route path="/patient-details" element={<PatientDetailedInfo />} />
+                <Route path="/balance-reduction" element={<BalanceReductionManagement />} />
+                <Route path="/import" element={<PatientDetailedInfo />} />
+
+                <Route path="/reports" element={<Reports />} />
+              </Route>
+
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </Provider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

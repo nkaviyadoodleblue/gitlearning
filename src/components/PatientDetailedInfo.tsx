@@ -6,11 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Layout } from "@/components/Layout";
-
-interface PatientDetailedInfoProps {
-  onNavigate: (page: string, appointmentId?: string) => void;
-  patientId: string;
-}
+import { useNavigate } from "react-router-dom";
 
 interface CaseProgress {
   currentStep: number;
@@ -27,7 +23,7 @@ interface Appointment {
   caseProgress: CaseProgress;
 }
 
-export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedInfoProps) => {
+export const PatientDetailedInfo = () => {
   // Mock patient data - in real app this would come from props or API
   const patient = {
     name: "John Doe",
@@ -37,6 +33,13 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
     caseNumber: "ACE-2024-001"
   };
 
+  const navigate = useNavigate();
+
+  const onNavigate = (page: string, id = null) => {
+    let url = `/${page}`;
+    if (id) url = url + "/" + id
+    navigate(url)
+  }
   // Mock appointments data with progress tracking
   const [appointments, setAppointments] = useState([
     {
@@ -52,7 +55,7 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
       }
     },
     {
-      id: "2", 
+      id: "2",
       serviceProvider: "NuAdvance Orthopedics",
       treatmentDetails: "Physical Therapy Sessions (10)",
       currentBalance: 1200.00,
@@ -82,7 +85,7 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
     const savedProgress = localStorage.getItem('appointmentProgress');
     if (savedProgress) {
       const progressData = JSON.parse(savedProgress);
-      setAppointments(prev => 
+      setAppointments(prev =>
         prev.map(appointment => ({
           ...appointment,
           caseProgress: progressData[appointment.id]?.caseProgress || appointment.caseProgress,
@@ -135,7 +138,7 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
   };
 
   return (
-    <Layout title="Patient Details" onNavigate={onNavigate}>
+    <Layout title="Patient Details" >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
@@ -192,14 +195,14 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
                     ${appointments.reduce((total, appointment) => total + appointment.currentBalance, 0).toLocaleString()}
                   </div>
                   <div className="text-lg font-semibold text-medical-primary">
-                    Final: ${appointments.reduce((total, appointment) => 
+                    Final: ${appointments.reduce((total, appointment) =>
                       total + calculateFinalBalance(appointment.currentBalance, appointment.caseProgress), 0
                     ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </div>
                   <div className="text-sm text-medical-muted">
                     Total Savings: ${(
                       appointments.reduce((total, appointment) => total + appointment.currentBalance, 0) -
-                      appointments.reduce((total, appointment) => 
+                      appointments.reduce((total, appointment) =>
                         total + calculateFinalBalance(appointment.currentBalance, appointment.caseProgress), 0
                       )
                     ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -289,9 +292,9 @@ export const PatientDetailedInfo = ({ onNavigate, patientId }: PatientDetailedIn
                             {getProgressStatus(appointment.caseProgress)}
                           </span>
                         </div>
-                        <Progress 
-                          value={getProgressPercentage(appointment.caseProgress)} 
-                          className="h-2" 
+                        <Progress
+                          value={getProgressPercentage(appointment.caseProgress)}
+                          className="h-2"
                         />
                         <div className="text-xs text-medical-muted">
                           {getProgressPercentage(appointment.caseProgress)}% Complete

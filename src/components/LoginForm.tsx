@@ -1,57 +1,34 @@
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 import medicalHero from "@/assets/medical-hero.jpg";
-import { useDispatch } from "react-redux";
-import { fetchTelecallerRequest } from "@/store/counterSlice";
 import { useAppDispatch } from "@/hooks/use-dispatch";
+import { login } from "@/store/authSlice";
+import { useForm } from "react-hook-form";
+import Input from "./common/Input";
+import { useAppSelector } from "@/hooks/use-selector";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-interface LoginFormProps {
-  onLogin: () => void;
-}
 
-export const LoginForm = ({ onLogin }: LoginFormProps) => {
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: ""
-  });
+export const LoginForm = () => {
+
+  const { handleSubmit, register, formState: { errors } } = useForm();
   const dispatch = useAppDispatch();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const isLoading = useAppSelector(state => state?.auth.isLoginLoading);
 
-  useEffect(() => {
-    dispatch(fetchTelecallerRequest())
-  }, [])
+  const navigate = useNavigate()
 
+  const onSubmit = (data) => {
+    dispatch(login(data))
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token")
+  //   if (token)
+  //     navigate("/")
+  // }, [])
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    if (credentials.username === "admin" && credentials.password === "password") {
-      toast({
-        title: "Login Successful",
-        description: "Welcome to ACE Physician Service",
-      });
-      onLogin();
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password",
-        variant: "destructive",
-      });
-    }
-
-    setIsLoading(false);
-  };
 
   return (
     <div className="min-h-screen flex">
@@ -94,46 +71,28 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="Enter your username"
-                    value={credentials.username}
-                    onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={credentials.password}
-                      onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <Input
+                  register={register}
+                  rules={{
+                    required: "Username is required"
+                  }}
+                  name="username"
+                  label="Username"
+                  placeholder="Enter your username"
+                  errors={errors}
+                />
+                <Input
+                  register={register}
+                  name="password"
+                  rules={{
+                    required: "Password is required"
+                  }}
+                  label="Password"
+                  type="password"
+                  placeholder="Enter your password"
+                  errors={errors}
+                />
                 <Button
                   type="submit"
                   variant="medical"
@@ -143,16 +102,10 @@ export const LoginForm = ({ onLogin }: LoginFormProps) => {
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
-
-              <div className="mt-6 text-center text-sm text-muted-foreground">
-                <p>Demo credentials:</p>
-                <p>Username: <code className="bg-muted px-1 rounded">admin</code></p>
-                <p>Password: <code className="bg-muted px-1 rounded">password</code></p>
-              </div>
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>
+    </div >
   );
 };

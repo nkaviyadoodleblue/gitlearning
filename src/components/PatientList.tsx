@@ -4,15 +4,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Layout } from "@/components/Layout";
-import { 
-  Search, 
-  Upload, 
-  FileText, 
+import {
+  Search,
+  Upload,
+  FileText,
   Calendar,
   Eye,
   ArrowLeft,
   Users
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAppDispatch } from "@/hooks/use-dispatch";
 
 interface Patient {
   id: string;
@@ -25,13 +27,9 @@ interface Patient {
   providersCount: number;
 }
 
-interface PatientListProps {
-  onNavigate: (page: string, patientId?: string) => void;
-}
-
-export const PatientList = ({ onNavigate }: PatientListProps) => {
+export const PatientList = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   // Sample data - in real app this would come from CSV import/API
   const [patients] = useState<Patient[]>([
     {
@@ -45,7 +43,7 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
       providersCount: 3
     },
     {
-      id: "2", 
+      id: "2",
       name: "Sarah Johnson",
       dob: "1992-07-22",
       gender: "Female",
@@ -58,7 +56,7 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
       id: "3",
       name: "Michael Brown",
       dob: "1978-11-08",
-      gender: "Male", 
+      gender: "Male",
       caseNumber: "ACE-2024-003",
       registrationDate: "2024-01-20",
       status: "active",
@@ -69,13 +67,20 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
       name: "Emily Davis",
       dob: "1990-05-12",
       gender: "Female",
-      caseNumber: "ACE-2024-004", 
+      caseNumber: "ACE-2024-004",
       registrationDate: "2024-01-22",
       status: "completed",
       providersCount: 2
     }
   ]);
 
+  const navigate = useNavigate();
+
+  const onNavigate = (page, id = null) => {
+    let url = `/${page}`;
+    if (id) url = url + "/" + id
+    navigate(url)
+  }
   const filteredPatients = patients.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
@@ -91,13 +96,13 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
   };
 
   return (
-    <Layout title="Patient Management" onNavigate={onNavigate}>
+    <Layout title="Patient Management">
       <div className="space-y-6 animate-fade-in">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               onClick={() => onNavigate("dashboard")}
               className="text-muted-foreground hover:text-foreground"
             >
@@ -105,7 +110,7 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
               Back to Dashboard
             </Button>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -142,7 +147,7 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
                   </Badge>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 {/* Patient Details */}
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -151,13 +156,13 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
                     <span className="text-muted-foreground">DOB:</span>
                   </div>
                   <span className="font-medium">{new Date(patient.dob).toLocaleDateString()}</span>
-                  
+
                   <div className="flex items-center space-x-2">
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Gender:</span>
                   </div>
                   <span className="font-medium">{patient.gender}</span>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Registered:</span>
@@ -177,8 +182,8 @@ export const PatientList = ({ onNavigate }: PatientListProps) => {
                 </div>
 
                 {/* Action Button */}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
                   onClick={() => onNavigate("patient-details", patient.id)}
                 >

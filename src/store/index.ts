@@ -1,10 +1,12 @@
 import { configureStore, ThunkAction } from '@reduxjs/toolkit'
 import counterReducer from './counterSlice';
+import authReducer from './authSlice';
 import { client } from '@/lib/client';
 
 export const store = configureStore({
     reducer: {
         counter: counterReducer,
+        auth: authReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

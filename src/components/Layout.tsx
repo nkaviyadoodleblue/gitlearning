@@ -1,18 +1,30 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { LogOut, Menu, User, Home } from "lucide-react";
+import { useAppDispatch } from "@/hooks/use-dispatch";
+import { logout, setCurrentPage } from "@/store/authSlice";
+import { useAppSelector } from "@/hooks/use-selector";
+import { useNavigate } from "react-router-dom";
 
 interface LayoutProps {
   children: ReactNode;
   title?: string;
-  onNavigate?: (page: string, id?: string) => void;
+  // onNavigate?: (page: string, id?: string) => void;
   showHomeButton?: boolean;
 }
 
-export const Layout = ({ children, title = "ACE Physician Service", onNavigate, showHomeButton = true }: LayoutProps) => {
+export const Layout = ({ children, title = "ACE Physician Service", showHomeButton = true }: LayoutProps) => {
+
+  const dispatch = useAppDispatch();
+
+  const username = useAppSelector(state => state.auth.user?.username)
+  const navigate = useNavigate();
+
+  const onNavigate = (page) => {
+    navigate(`/${page}`)
+  }
   const handleLogout = () => {
-    // TODO: Implement logout logic
-    console.log("Logout clicked");
+    dispatch(logout())
   };
 
   return (
@@ -24,13 +36,13 @@ export const Layout = ({ children, title = "ACE Physician Service", onNavigate, 
             {/* Logo and Title */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <button 
+                <button
                   onClick={() => onNavigate?.("dashboard")}
                   className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center hover:shadow-lg transition-all duration-200 cursor-pointer"
                 >
                   <span className="text-primary-foreground font-bold text-lg">A</span>
                 </button>
-                <button 
+                <button
                   onClick={() => onNavigate?.("dashboard")}
                   className="text-xl font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
                 >
@@ -48,7 +60,7 @@ export const Layout = ({ children, title = "ACE Physician Service", onNavigate, 
             {/* Navigation and User Menu */}
             <div className="flex items-center space-x-4">
               {/* Home button - only show if not on dashboard and navigation is available */}
-              {onNavigate && showHomeButton && title !== "ACE Physician Service" && (
+              {showHomeButton && title !== "ACE Physician Service" && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -59,10 +71,10 @@ export const Layout = ({ children, title = "ACE Physician Service", onNavigate, 
                   Home
                 </Button>
               )}
-              
+
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
-                <span>Admin</span>
+                <span>{username}</span>
               </div>
               <Button
                 variant="ghost"

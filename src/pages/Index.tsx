@@ -6,17 +6,14 @@ import { PatientDetailedInfo } from "@/components/PatientDetailedInfo";
 import { BalanceReductionManagement } from "@/components/BalanceReductionManagement";
 import { Reports } from "@/components/Reports";
 import { CSVUpload } from "@/components/CSVUpload";
+import { useAppSelector } from "@/hooks/use-selector";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const user = useAppSelector(state => state?.auth?.user);
   const [currentPage, setCurrentPage] = useState("dashboard");
+
   const [selectedPatientId, setSelectedPatientId] = useState<string>("");
   const [selectedAppointmentId, setSelectedAppointmentId] = useState<string>("");
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-    setCurrentPage("dashboard");
-  };
 
   const handleNavigate = (page: string, id?: string) => {
     setCurrentPage(page);
@@ -27,16 +24,16 @@ const Index = () => {
     }
   };
 
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
+  if (!user) {
+    return <LoginForm />;
   }
 
   // Main application routing
   switch (currentPage) {
     case "patients":
-      return <PatientList onNavigate={handleNavigate} />;
+      return <PatientList />;
     case "patient-details":
-      return <PatientDetailedInfo onNavigate={handleNavigate} patientId={selectedPatientId} />;
+      return <PatientDetailedInfo />;
     case "balance-reduction":
       return <BalanceReductionManagement onNavigate={handleNavigate} appointmentId={selectedAppointmentId} />;
     case "import":
@@ -44,7 +41,7 @@ const Index = () => {
     case "reports":
       return <Reports onNavigate={handleNavigate} />;
     default:
-      return <Dashboard onNavigate={handleNavigate} />;
+      return <Dashboard />;
   }
 };
 

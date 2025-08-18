@@ -59,7 +59,7 @@ export async function client(
         const response: AxiosResponse = await axiosInstance(requestConfig);
         const data = response.data;
         const { status, ...restData } = data || {};
-        if (response.status === 200 && data?.statusMessage === "Success") {
+        if (response.status === 200) {
             return {
                 status: true,
                 data: restData,
@@ -71,16 +71,16 @@ export async function client(
             message: data?.status,
         };
     } catch (err: any) {
-        console.log("first,", err?.request?.status);
-        if (err?.request?.status === 401) {
-            const redirectURL = (location.pathname?.includes("telecaller")) ? "/telecaller/login" : "/login";
-            deleteLocalStorage("token");
-            document.location.href = redirectURL;
-        }
+        console.log("first,", err);
+        // if (err?.request?.status === 401) {
+        //     const redirectURL = (location.pathname?.includes("telecaller")) ? "/telecaller/login" : "/login";
+        //     deleteLocalStorage("token");
+        //     document.location.href = redirectURL;
+        // }
         return {
             status: false,
-            data: err?.data || null,
-            message: err?.message,
+            data: err?.response?.data || null,
+            message: err?.response?.data?.msg || err?.message,
             error: err,
         };
     }

@@ -3,22 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Layout } from "@/components/Layout";
-import { 
-  Upload, 
-  Users, 
-  FileText, 
-  DollarSign, 
-  CheckCircle, 
+import {
+  Upload,
+  Users,
+  FileText,
+  DollarSign,
+  CheckCircle,
   Clock,
   TrendingUp,
   Activity
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-interface DashboardProps {
-  onNavigate: (page: string) => void;
-}
 
-export const Dashboard = ({ onNavigate }: DashboardProps) => {
+
+export const Dashboard = () => {
   const [stats] = useState({
     totalPatients: 124,
     activeCases: 89,
@@ -26,6 +25,12 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
     completedCases: 35,
     pendingFollowUps: 12
   });
+
+  const navigate = useNavigate();
+
+  const onNavigate = (page) => {
+    navigate(`/${page}`)
+  }
 
   const quickActions = [
     {
@@ -59,7 +64,7 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
   ];
 
   return (
-    <Layout title="Dashboard" onNavigate={onNavigate} showHomeButton={false}>
+    <Layout title="Dashboard" showHomeButton={false}>
       <div className="space-y-8 animate-fade-in">
         {/* Welcome Section */}
         <div className="bg-gradient-primary rounded-lg p-8 text-primary-foreground">
@@ -152,16 +157,14 @@ export const Dashboard = ({ onNavigate }: DashboardProps) => {
             <CardContent className="space-y-4">
               {recentActivity.map((activity, index) => (
                 <div key={index} className="flex items-start space-x-3">
-                  <div className={`p-1 rounded-full mt-1 ${
-                    activity.type === 'success' ? 'bg-medical-success/20' :
+                  <div className={`p-1 rounded-full mt-1 ${activity.type === 'success' ? 'bg-medical-success/20' :
                     activity.type === 'warning' ? 'bg-medical-warning/20' :
-                    'bg-primary/20'
-                  }`}>
-                    <div className={`w-2 h-2 rounded-full ${
-                      activity.type === 'success' ? 'bg-medical-success' :
+                      'bg-primary/20'
+                    }`}>
+                    <div className={`w-2 h-2 rounded-full ${activity.type === 'success' ? 'bg-medical-success' :
                       activity.type === 'warning' ? 'bg-medical-warning' :
-                      'bg-primary'
-                    }`} />
+                        'bg-primary'
+                      }`} />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">{activity.action}</p>
