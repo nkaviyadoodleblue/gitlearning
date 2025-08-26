@@ -6,7 +6,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Layout } from "@/components/Layout";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAppDispatch } from "@/hooks/use-dispatch";
+import { getPatientDetails } from "@/store/patientSlice";
+import { useAppSelector } from "@/hooks/use-selector";
 
 interface CaseProgress {
   currentStep: number;
@@ -34,6 +37,9 @@ export const PatientDetailedInfo = () => {
   };
 
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const patientDetails = useAppSelector(state => state.patient.patientDetails);
+  const { id } = useParams<{ id: string }>();
 
   const onNavigate = (page: string, id = null) => {
     let url = `/${page}`;
@@ -95,6 +101,12 @@ export const PatientDetailedInfo = () => {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      dispatch(getPatientDetails(id));
+    }
+  }, [id]);
 
   // Function to calculate progress percentage
   const getProgressPercentage = (progress: CaseProgress) => {
@@ -167,22 +179,22 @@ export const PatientDetailedInfo = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-medical-muted">Patient Name</label>
-                <p className="text-lg font-semibold text-medical-dark">{patient.name}</p>
+                <p className="text-lg font-semibold text-medical-dark">{patientDetails.name}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-medical-muted">Date of Birth</label>
-                <p className="text-medical-dark">{new Date(patient.dob).toLocaleDateString()}</p>
+                <p className="text-medical-dark">{new Date(patientDetails.dob).toLocaleDateString()}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-medical-muted">Gender</label>
-                <p className="text-medical-dark">{patient.gender}</p>
+                <p className="text-medical-dark">{patientDetails.gender}</p>
               </div>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-medical-muted">Date of Registration</label>
-                <p className="text-medical-dark">{new Date(patient.registrationDate).toLocaleDateString()}</p>
+                <p className="text-medical-dark">{new Date(patientDetails.registrationDate).toLocaleDateString()}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-medical-muted">Case Number</label>

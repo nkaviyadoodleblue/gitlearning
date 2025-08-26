@@ -1,11 +1,11 @@
 import { configureStore, ThunkAction } from '@reduxjs/toolkit'
-import counterReducer from './counterSlice';
 import authReducer from './authSlice';
 import { client } from '@/lib/client';
+import patientReducer from './patientSlice';
 
 export const store = configureStore({
     reducer: {
-        counter: counterReducer,
+        patient: patientReducer,
         auth: authReducer,
     },
     middleware: (getDefaultMiddleware) =>

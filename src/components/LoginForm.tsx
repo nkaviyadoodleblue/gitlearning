@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield } from "lucide-react";
 import medicalHero from "@/assets/medical-hero.jpg";
 import { useAppDispatch } from "@/hooks/use-dispatch";
-import { login } from "@/store/authSlice";
+import { checkIsLoggedIn, login } from "@/store/authSlice";
 import { useForm } from "react-hook-form";
 import Input from "./common/Input";
 import { useAppSelector } from "@/hooks/use-selector";
@@ -16,18 +16,23 @@ export const LoginForm = () => {
   const { handleSubmit, register, formState: { errors } } = useForm();
   const dispatch = useAppDispatch();
   const isLoading = useAppSelector(state => state?.auth.isLoginLoading);
+  const user = useAppSelector(state => state?.auth.user);
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
+  // const navigate = useNavigate()
 
-  const onSubmit = (data) => {
-    dispatch(login(data))
+  const onSubmit = async (data) => {
+    const res = await dispatch(login(data))
+    if (res)
+      navigate("/")
   }
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem("token")
-  //   if (token)
-  //     navigate("/")
-  // }, [])
+  useEffect(() => {
+    dispatch(checkIsLoggedIn()).then((res) => {
+      if (res)
+        navigate("/")
+    })
+  }, [])
 
 
   return (

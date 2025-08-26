@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
+import { getPatientData } from "@/store/patientSlice";
+import { useAppSelector } from "@/hooks/use-selector";
 
 interface Patient {
   id: string;
@@ -31,64 +33,72 @@ export const PatientList = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Sample data - in real app this would come from CSV import/API
-  const [patients] = useState<Patient[]>([
-    {
-      id: "1",
-      name: "John Smith",
-      dob: "1985-03-15",
-      gender: "Male",
-      caseNumber: "ACE-2024-001",
-      registrationDate: "2024-01-15",
-      status: "active",
-      providersCount: 3
-    },
-    {
-      id: "2",
-      name: "Sarah Johnson",
-      dob: "1992-07-22",
-      gender: "Female",
-      caseNumber: "ACE-2024-002",
-      registrationDate: "2024-01-18",
-      status: "pending",
-      providersCount: 2
-    },
-    {
-      id: "3",
-      name: "Michael Brown",
-      dob: "1978-11-08",
-      gender: "Male",
-      caseNumber: "ACE-2024-003",
-      registrationDate: "2024-01-20",
-      status: "active",
-      providersCount: 4
-    },
-    {
-      id: "4",
-      name: "Emily Davis",
-      dob: "1990-05-12",
-      gender: "Female",
-      caseNumber: "ACE-2024-004",
-      registrationDate: "2024-01-22",
-      status: "completed",
-      providersCount: 2
-    }
-  ]);
+  // const [patients] = useState<Patient[]>([
+  //   {
+  //     id: "1",
+  //     name: "John Smith",
+  //     dob: "1985-03-15",
+  //     gender: "Male",
+  //     caseNumber: "ACE-2024-001",
+  //     registrationDate: "2024-01-15",
+  //     status: "active",
+  //     providersCount: 3
+  //   },
+  //   {
+  //     id: "2",
+  //     name: "Sarah Johnson",
+  //     dob: "1992-07-22",
+  //     gender: "Female",
+  //     caseNumber: "ACE-2024-002",
+  //     registrationDate: "2024-01-18",
+  //     status: "pending",
+  //     providersCount: 2
+  //   },
+  //   {
+  //     id: "3",
+  //     name: "Michael Brown",
+  //     dob: "1978-11-08",
+  //     gender: "Male",
+  //     caseNumber: "ACE-2024-003",
+  //     registrationDate: "2024-01-20",
+  //     status: "active",
+  //     providersCount: 4
+  //   },
+  //   {
+  //     id: "4",
+  //     name: "Emily Davis",
+  //     dob: "1990-05-12",
+  //     gender: "Female",
+  //     caseNumber: "ACE-2024-004",
+  //     registrationDate: "2024-01-22",
+  //     status: "completed",
+  //     providersCount: 2
+  //   }
+  // ]);
 
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const patientList = useAppSelector(state => state?.patient.patientList);
+
+  useEffect(() => {
+    dispatch(getPatientData())
+  }, [])
+
 
   const onNavigate = (page, id = null) => {
     let url = `/${page}`;
     if (id) url = url + "/" + id
     navigate(url)
   }
-  const filteredPatients = patients.filter(patient =>
+
+  const filteredPatients = patientList.filter(patient =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-medical-warning/20 text-medical-warning';
+      case 'Active': return 'bg-medical-warning/20 text-medical-warning';
       case 'pending': return 'bg-primary/20 text-primary';
       case 'completed': return 'bg-medical-success/20 text-medical-success';
       default: return 'bg-medical-neutral/20 text-medical-neutral';
@@ -130,20 +140,21 @@ export const PatientList = () => {
 
         {/* Patients Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredPatients.map((patient) => (
-            <Card key={patient.id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
+
+          {patientList.map((patient) => (
+            <Card key={patient?._id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {patient.name}
+                      {patient?.name}
                     </CardTitle>
                     <CardDescription className="mt-1">
-                      Case: {patient.caseNumber}
+                      Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
                     </CardDescription>
                   </div>
-                  <Badge className={getStatusColor(patient.status)}>
-                    {patient.status}
+                  <Badge className={getStatusColor(patient.cases?.[0]?.status || 'N/A')}>
+                    {patient.cases?.[0]?.status || 'N/A'}
                   </Badge>
                 </div>
               </CardHeader>
@@ -185,7 +196,7 @@ export const PatientList = () => {
                 <Button
                   variant="outline"
                   className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
-                  onClick={() => onNavigate("patient-details", patient.id)}
+                  onClick={() => navigate(`/patients/${patient._id}`)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   View Details
@@ -196,7 +207,7 @@ export const PatientList = () => {
         </div>
 
         {/* Empty State */}
-        {filteredPatients.length === 0 && (
+        {patientList.length === 0 && (
           <Card className="text-center py-12">
             <CardContent>
               <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -220,18 +231,18 @@ export const PatientList = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{patients.length}</div>
+                <div className="text-2xl font-bold text-primary">{patientList.length}</div>
                 <div className="text-sm text-muted-foreground">Total Patients</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-warning">
-                  {patients.filter(p => p.status === 'active').length}
+                  {patientList.filter(p => p.status === 'active').length}
                 </div>
                 <div className="text-sm text-muted-foreground">Active Cases</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-success">
-                  {patients.filter(p => p.status === 'completed').length}
+                  {patientList.filter(p => p.status === 'completed').length}
                 </div>
                 <div className="text-sm text-muted-foreground">Completed</div>
               </div>

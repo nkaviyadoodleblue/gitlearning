@@ -15,8 +15,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-
-
 export const Dashboard = () => {
   const [stats] = useState({
     totalPatients: 124,
