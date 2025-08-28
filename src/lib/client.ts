@@ -50,7 +50,7 @@ export async function client(
         method,
         headers: {
             "Content-Type": contentType,
-            ...((includeAuthorization && accessToken) ? { Authorization: `Bearer ${accessToken}` } : {})
+            ...((includeAuthorization && accessToken) ? { "x-auth-token": `${accessToken}` } : {})
         },
         data: method === "GET" ? undefined : body,
         ...customConfig,
