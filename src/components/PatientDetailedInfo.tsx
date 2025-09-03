@@ -38,7 +38,7 @@ export const PatientDetailedInfo = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const patientDetails = useAppSelector(state => state.patient.patientDetails);
+  const { patientDetails = {}, caseDetails, appointmentHistory } = useAppSelector(state => state.patient.patientDetails) || {};
   const { id } = useParams<{ id: string }>();
 
   const onNavigate = (page: string, id = null) => {
@@ -88,18 +88,18 @@ export const PatientDetailedInfo = () => {
 
   // Load appointment progress from localStorage on component mount
   useEffect(() => {
-    const savedProgress = localStorage.getItem('appointmentProgress');
-    if (savedProgress) {
-      const progressData = JSON.parse(savedProgress);
-      setAppointments(prev =>
-        prev.map(appointment => ({
-          ...appointment,
-          caseProgress: progressData[appointment.id]?.caseProgress || appointment.caseProgress,
-          currentBalance: progressData[appointment.id]?.currentBalance || appointment.currentBalance,
-          status: progressData[appointment.id]?.status || appointment.status
-        }))
-      );
-    }
+    // const savedProgress = localStorage.getItem('appointmentProgress');
+    // if (savedProgress) {
+    //   const progressData = JSON.parse(savedProgress);
+    //   setAppointments(prev =>
+    //     prev.map(appointment => ({
+    //       ...appointment,
+    //       caseProgress: progressData[appointment.id]?.caseProgress || appointment.caseProgress,
+    //       currentBalance: progressData[appointment.id]?.currentBalance || appointment.currentBalance,
+    //       status: progressData[appointment.id]?.status || appointment.status
+    //     }))
+    //   );
+    // }
   }, []);
 
   useEffect(() => {
@@ -157,7 +157,7 @@ export const PatientDetailedInfo = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("patients")}
+            onClick={() => navigate("/patients")}
             className="text-medical-primary hover:text-medical-primary/80"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -318,7 +318,7 @@ export const PatientDetailedInfo = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => onNavigate("balance-reduction", appointment.id)}
+                          onClick={() => navigate("/balance-reduction/" + appointment.id)}
                           className="h-8 w-8 p-0 text-medical-primary hover:text-medical-primary/80"
                         >
                           <Edit className="h-4 w-4" />

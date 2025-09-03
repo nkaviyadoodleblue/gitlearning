@@ -6,14 +6,24 @@ import { deleteLocalStorage, getLocalStorage, setLocalStorage } from '@/lib/stor
 import { set } from 'date-fns';
 
 export interface PatientState {
-    patientList: any[];
+    patientList: {
+        list: any[];
+        totalPages: number;
+        totalPatients: number;
+        currentPage: number;
+    };
     isLoading: boolean;
     patientDetails: any | null;
     isPatientDetailsLoading: boolean;
 }
 
 const initialState: PatientState = {
-    patientList: [],
+    patientList: {
+        list: [],
+        totalPages: 0,
+        totalPatients: 0,
+        currentPage: 0
+    },
     isLoading: false,
     patientDetails: null,
     isPatientDetailsLoading: false,
@@ -43,12 +53,16 @@ export const { setPatientList, setIsLoading, setPatientDetails, setIsPatientDeta
 
 export default patientSlice.reducer;
 
-export const getPatientData = (): AppThunk<boolean> => async (dispatch, _getState, client) => {
+export const getPatientData = ({ page = 1, limit = 10, search = "" }): AppThunk<boolean> => async (dispatch, _getState, client) => {
     dispatch(setIsLoading(true))
-    const { data, message, status } = await client.get("/patients");
+    const { data, message, status } = await client.get("/patients?page=" + (page || 1) + "&limit=" + limit);
     if (status) {
-        console.log(data?.data)
-        dispatch(setPatientList(data?.data || []))
+        dispatch(setPatientList({
+            list: data?.data.list,
+            currentPage: data?.data.currentPage,
+            totalPages: data?.data.totalPages,
+            totalPatients: data?.data.totalPatients
+        }))
     } else {
         toast({
             description: message || "Failed to fetch patient data",
@@ -62,7 +76,7 @@ export const getPatientData = (): AppThunk<boolean> => async (dispatch, _getStat
 
 export const getPatientDetails = (id: string): AppThunk<boolean> => async (dispatch, _getState, client) => {
     dispatch(setIsPatientDetailsLoading(true))
-    const { data, message, status } = await client.get("/patients/" + id);
+    const { data, message, status } = await client.get("/patients/details/" + id);
     if (status) {
         console.log(data?.data)
         dispatch(setPatientDetails(data?.data))

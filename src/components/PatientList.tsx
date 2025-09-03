@@ -17,6 +17,8 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
 import { getPatientData } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
+import { Pagination } from "./common/Pagination";
+
 
 interface Patient {
   id: string;
@@ -78,10 +80,13 @@ export const PatientList = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const patientList = useAppSelector(state => state?.patient.patientList);
-
+  const patientData = useAppSelector(state => state?.patient.patientList);
+  const { list: patientList, totalPages, totalPatients, currentPage } = patientData;
+  console.log({
+    patientData
+  })
   useEffect(() => {
-    dispatch(getPatientData())
+    dispatch(getPatientData({ page: currentPage }))
   }, [])
 
 
@@ -95,6 +100,12 @@ export const PatientList = () => {
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handlePageChange = (page: number) => {
+    console.log(page, "pp")
+    dispatch(getPatientData({ page: page }))
+    // Fetch new data based on the page number
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,7 +124,7 @@ export const PatientList = () => {
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => navigate("/dashboard")}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -204,6 +215,15 @@ export const PatientList = () => {
               </CardContent>
             </Card>
           ))}
+
+        </div>
+
+        <div>
+          <Pagination
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            pageCount={totalPages}  // Assuming 2 patients per page
+          />
         </div>
 
         {/* Empty State */}

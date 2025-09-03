@@ -16,6 +16,7 @@ import { Dashboard } from "./components/Dashboard";
 import { Reports } from "./components/Reports";
 import Protected from "./components/Protected";
 import { useAppSelector } from "./hooks/use-selector";
+import { CSVUpload } from "./components/CSVUpload";
 
 const queryClient = new QueryClient();
 
@@ -39,8 +40,8 @@ const App = () => {
                 <Route path="/patients" element={<PatientList />} />
 
                 <Route path="/patients/:id" element={<PatientDetailedInfo />} />
-                <Route path="/balance-reduction" element={<BalanceReductionManagement />} />
-                <Route path="/import" element={<PatientDetailedInfo />} />
+                <Route path="/balance-reduction/:id" element={<BalanceReductionManagement />} />
+                <Route path="/import" element={<CSVUpload />} />
 
                 <Route path="/reports" element={<Reports />} />
               </Route>

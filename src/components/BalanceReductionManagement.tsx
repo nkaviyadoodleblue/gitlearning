@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Layout } from "@/components/Layout";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useNavigate } from "react-router-dom";
 
 interface BalanceReductionManagementProps {
   onNavigate: (page: string, appointmentId?: string) => void;
@@ -30,6 +31,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     3: false,
     4: false
   });
+  const navigate = useNavigate();
 
   // Load progress from localStorage on component mount
   useEffect(() => {
@@ -48,13 +50,13 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const saveProgressToLocalStorage = (progress: CaseProgress, updatedBalance?: number, newStatus?: string) => {
     const savedProgress = localStorage.getItem('appointmentProgress');
     const progressData = savedProgress ? JSON.parse(savedProgress) : {};
-    
+
     progressData[appointmentId] = {
       caseProgress: progress,
       currentBalance: updatedBalance,
       status: newStatus
     };
-    
+
     localStorage.setItem('appointmentProgress', JSON.stringify(progressData));
   };
 
@@ -132,8 +134,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const totalBillValue = appointmentHistory.reduce((sum, item) => sum + item.billAmount, 0);
 
   const toggleStepExpansion = (stepId: number) => {
-    setExpandedSteps(prev => 
-      prev.includes(stepId) 
+    setExpandedSteps(prev =>
+      prev.includes(stepId)
         ? prev.filter(id => id !== stepId)
         : [...prev, stepId]
     );
@@ -142,21 +144,21 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const handleCloseCase = () => {
     const newCurrentStep = 2;
     setCurrentStep(newCurrentStep);
-    
+
     // Save progress to localStorage
     saveProgressToLocalStorage({
       currentStep: newCurrentStep,
       stepCompletionStatus,
       totalBillValue
     });
-    
+
     alert("Case has been closed and moved to Step 1!");
   };
 
   const markStepComplete = (stepId: number) => {
     // Validation: Check if previous steps are completed before allowing current step completion
     const canCompleteStep = validateStepCompletion(stepId);
-    
+
     if (!canCompleteStep.isValid) {
       alert(canCompleteStep.message);
       return;
@@ -168,7 +170,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     };
 
     setStepCompletionStatus(newStepCompletionStatus);
-    
+
     // Update current step to next step if this wasn't the last step
     const newCurrentStep = stepId < 4 ? stepId + 1 : currentStep;
     if (newCurrentStep !== currentStep) {
@@ -178,7 +180,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     // Calculate new balance (reduce by 10% per completed step for demo)
     const completedSteps = Object.values(newStepCompletionStatus).filter(Boolean).length;
     const newBalance = totalBillValue * (1 - (completedSteps * 0.1));
-    
+
     // Determine new status based on completion
     let newStatus = "Active";
     if (completedSteps === 4) {
@@ -220,7 +222,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const canAccessStep = (stepId: number) => {
     // Step 1 is always accessible
     if (stepId === 1) return true;
-    
+
     // For other steps, check if previous step is completed
     const previousStepId = stepId - 1;
     return stepCompletionStatus[previousStepId as keyof typeof stepCompletionStatus];
@@ -249,14 +251,14 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   };
 
   return (
-    <Layout title="Balance Reduction Management" onNavigate={onNavigate}>
+    <Layout title="Balance Reduction Management" >
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("patient-details")}
+            onClick={() => navigate(-1)}
             className="text-medical-primary hover:text-medical-primary/80"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -274,26 +276,23 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
             <div className="flex items-center justify-between relative">
               {milestones.map((milestone, index) => (
                 <div key={milestone.id} className="flex flex-col items-center relative z-10">
-                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
-                    milestone.status === "completed" 
-                      ? "bg-medical-success border-medical-success text-white" 
-                      : "bg-orange-100 border-orange-400 text-orange-600"
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${milestone.status === "completed"
+                    ? "bg-medical-success border-medical-success text-white"
+                    : "bg-orange-100 border-orange-400 text-orange-600"
+                    }`}>
                     {milestone.status === "completed" ? (
                       <CheckCircle className="h-5 w-5" />
                     ) : (
                       <Clock className="h-5 w-5" />
                     )}
                   </div>
-                  <span className={`mt-2 text-xs text-center max-w-[100px] ${
-                    milestone.status === "completed" ? "text-medical-success font-medium" : "text-orange-600"
-                  }`}>
+                  <span className={`mt-2 text-xs text-center max-w-[100px] ${milestone.status === "completed" ? "text-medical-success font-medium" : "text-orange-600"
+                    }`}>
                     {milestone.title}
                   </span>
                   {index < milestones.length - 1 && (
-                    <div className={`absolute top-5 left-10 w-[calc(100vw/5-2.5rem)] h-0.5 ${
-                      milestones[index + 1].status === "completed" ? "bg-medical-success" : "bg-medical-border"
-                    }`} />
+                    <div className={`absolute top-5 left-10 w-[calc(100vw/5-2.5rem)] h-0.5 ${milestones[index + 1].status === "completed" ? "bg-medical-success" : "bg-medical-border"
+                      }`} />
                   )}
                 </div>
               ))}
@@ -462,111 +461,109 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
             const isAccessible = canAccessStep(step.id);
             const cardOpacity = isAccessible ? 'opacity-100' : 'opacity-50';
             const cursorStyle = isAccessible ? 'cursor-pointer' : 'cursor-not-allowed';
-            
+
             return (
-            <Card key={step.id} className={`border ${step.completed ? 'border-medical-success bg-medical-success/5' : 'border-orange-300 bg-orange-50/30'} ${cardOpacity} transition-opacity`}>
-              <Collapsible
-                open={expandedSteps.includes(step.id)}
-                onOpenChange={() => isAccessible && toggleStepExpansion(step.id)}
-                disabled={!isAccessible}
-              >
-                <CollapsibleTrigger asChild disabled={!isAccessible}>
-                  <CardHeader className={`${isAccessible ? 'hover:bg-medical-background/30' : ''} transition-colors ${cursorStyle}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          step.completed ? 'bg-medical-success text-white' : 
-                          isAccessible ? 'bg-orange-400 text-white' : 'bg-gray-400 text-white'
-                        }`}>
-                          {step.completed ? (
-                            <CheckCircle className="h-4 w-4" />
-                          ) : isAccessible ? (
-                            <Clock className="h-4 w-4" />
-                          ) : (
-                            <Lock className="h-4 w-4" />
-                          )}
+              <Card key={step.id} className={`border ${step.completed ? 'border-medical-success bg-medical-success/5' : 'border-orange-300 bg-orange-50/30'} ${cardOpacity} transition-opacity`}>
+                <Collapsible
+                  open={expandedSteps.includes(step.id)}
+                  onOpenChange={() => isAccessible && toggleStepExpansion(step.id)}
+                  disabled={!isAccessible}
+                >
+                  <CollapsibleTrigger asChild disabled={!isAccessible}>
+                    <CardHeader className={`${isAccessible ? 'hover:bg-medical-background/30' : ''} transition-colors ${cursorStyle}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step.completed ? 'bg-medical-success text-white' :
+                            isAccessible ? 'bg-orange-400 text-white' : 'bg-gray-400 text-white'
+                            }`}>
+                            {step.completed ? (
+                              <CheckCircle className="h-4 w-4" />
+                            ) : isAccessible ? (
+                              <Clock className="h-4 w-4" />
+                            ) : (
+                              <Lock className="h-4 w-4" />
+                            )}
+                          </div>
+                          <CardTitle className={`text-lg ${step.completed ? 'text-medical-success' :
+                            isAccessible ? 'text-orange-600' : 'text-gray-500'
+                            }`}>
+                            Step {step.id}: {step.title}
+                            {!isAccessible && step.id > 1 && (
+                              <span className="text-xs text-gray-400 ml-2">
+                                (Complete Step {step.id - 1} first)
+                              </span>
+                            )}
+                          </CardTitle>
+                          <Badge variant={step.completed ? "default" : "secondary"} className={
+                            step.completed ? "bg-medical-success text-white" :
+                              isAccessible ? "bg-orange-400 text-white" : "bg-gray-400 text-white"
+                          }>
+                            {step.completed ? "Completed" : isAccessible ? "Pending" : "Locked"}
+                          </Badge>
                         </div>
-                        <CardTitle className={`text-lg ${
-                          step.completed ? 'text-medical-success' : 
-                          isAccessible ? 'text-orange-600' : 'text-gray-500'
-                        }`}>
-                          Step {step.id}: {step.title}
-                          {!isAccessible && step.id > 1 && (
-                            <span className="text-xs text-gray-400 ml-2">
-                              (Complete Step {step.id - 1} first)
-                            </span>
-                          )}
-                        </CardTitle>
-                        <Badge variant={step.completed ? "default" : "secondary"} className={
-                          step.completed ? "bg-medical-success text-white" : 
-                          isAccessible ? "bg-orange-400 text-white" : "bg-gray-400 text-white"
-                        }>
-                          {step.completed ? "Completed" : isAccessible ? "Pending" : "Locked"}
-                        </Badge>
+                        {expandedSteps.includes(step.id) ? (
+                          <ChevronUp className="h-4 w-4 text-medical-muted" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-medical-muted" />
+                        )}
                       </div>
-                      {expandedSteps.includes(step.id) ? (
-                        <ChevronUp className="h-4 w-4 text-medical-muted" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-medical-muted" />
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <p className="text-medical-muted mb-4">{step.details}</p>
+
+                      {/* Step 2 (Settled Pending Reductions) - Reduction Amount Entry */}
+                      {step.id === 2 && (
+                        <div className="space-y-4 p-4 bg-medical-background rounded-lg">
+                          <h4 className="font-semibold text-medical-dark">Reduction Management</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-medical-dark">Total Bill Value</label>
+                              <Input
+                                value={`$${totalBillValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+                                disabled
+                                className="bg-gray-100"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-medical-dark">Reduction Amount</label>
+                              <Input
+                                type="number"
+                                value={reductionAmount}
+                                onChange={(e) => setReductionAmount(parseFloat(e.target.value) || 0)}
+                                placeholder="Enter reduction amount"
+                                className="border-medical-border"
+                                step="0.01"
+                              />
+                            </div>
+                          </div>
+                          <div className="p-3 bg-blue-50 rounded-lg">
+                            <div className="flex justify-between text-sm">
+                              <span>Final Amount After Reduction:</span>
+                              <span className="font-semibold">
+                                ${(totalBillValue - reductionAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                    </div>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <p className="text-medical-muted mb-4">{step.details}</p>
-                    
-                    {/* Step 2 (Settled Pending Reductions) - Reduction Amount Entry */}
-                    {step.id === 2 && (
-                      <div className="space-y-4 p-4 bg-medical-background rounded-lg">
-                        <h4 className="font-semibold text-medical-dark">Reduction Management</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-medical-dark">Total Bill Value</label>
-                            <Input 
-                              value={`$${totalBillValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
-                              disabled
-                              className="bg-gray-100"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-medical-dark">Reduction Amount</label>
-                            <Input
-                              type="number"
-                              value={reductionAmount}
-                              onChange={(e) => setReductionAmount(parseFloat(e.target.value) || 0)}
-                              placeholder="Enter reduction amount"
-                              className="border-medical-border"
-                              step="0.01"
-                            />
-                          </div>
+
+                      {/* Mark as Complete Button - Show for any step that is not completed */}
+                      {!step.completed && (
+                        <div className="mt-4">
+                          <Button
+                            onClick={() => markStepComplete(step.id)}
+                            className="bg-medical-success hover:bg-medical-success/90 text-white"
+                          >
+                            Mark Step {step.id} as Complete
+                          </Button>
                         </div>
-                        <div className="p-3 bg-blue-50 rounded-lg">
-                          <div className="flex justify-between text-sm">
-                            <span>Final Amount After Reduction:</span>
-                            <span className="font-semibold">
-                              ${(totalBillValue - reductionAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Mark as Complete Button - Show for any step that is not completed */}
-                    {!step.completed && (
-                      <div className="mt-4">
-                        <Button
-                          onClick={() => markStepComplete(step.id)}
-                          className="bg-medical-success hover:bg-medical-success/90 text-white"
-                        >
-                          Mark Step {step.id} as Complete
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
+                      )}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Collapsible>
+              </Card>
             );
           })}
         </div>

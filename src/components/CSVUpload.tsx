@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Upload, 
-  XCircle, 
+import {
+  Upload,
+  XCircle,
   Trash2,
   Eye,
   ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface CSVUploadProps {
   onNavigate: (page: string) => void;
@@ -47,7 +48,7 @@ const mockValidationErrors: ValidationError[] = [
   }
 ];
 
-export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
+export const CSVUpload = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -56,6 +57,7 @@ export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
   const [previewData, setPreviewData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,11 +70,11 @@ export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
         });
         return;
       }
-      
+
       setSelectedFile(file);
       setShowPreview(false);
       setValidationErrors([]);
-      
+
       // Simulate reading file for preview
       setTimeout(() => {
         setPreviewData([
@@ -109,7 +111,7 @@ export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
     if (selectedFile.name.includes("error")) {
       setValidationErrors(mockValidationErrors);
       toast({
-        title: "Upload Failed", 
+        title: "Upload Failed",
         description: "File contains validation errors",
         variant: "destructive"
       });
@@ -127,14 +129,14 @@ export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
   };
 
   return (
-    <Layout title="CSV Import" onNavigate={onNavigate}>
+    <Layout title="CSV Import">
       <div className="space-y-6">
         {/* Header with Back Button */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("dashboard")}
+            onClick={() => navigate("/dashboard")}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -263,14 +265,14 @@ export const CSVUpload = ({ onNavigate }: CSVUploadProps) => {
             )}
 
             <div className="flex gap-3">
-              <Button 
+              <Button
                 onClick={simulateUpload}
                 disabled={!selectedFile || isUploading}
                 className="flex-1"
               >
                 {isUploading ? "Uploading..." : "Upload File"}
               </Button>
-              <Button 
+              <Button
                 variant="outline"
                 onClick={() => {
                   setSelectedFile(null);
