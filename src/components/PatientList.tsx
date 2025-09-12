@@ -85,10 +85,17 @@ export const PatientList = () => {
   console.log({
     patientData
   })
-  useEffect(() => {
-    dispatch(getPatientData({ page: currentPage }))
-  }, [])
+  // useEffect(() => {
+  //   dispatch(getPatientData({ page: currentPage,search: searchTerm  }))
+  // }, [currentPage,searchTerm])
 
+useEffect(() => {
+    const delay = setTimeout(() => {
+        dispatch(getPatientData({ page: currentPage, search: searchTerm }));
+    }, 500); 
+
+    return () => clearTimeout(delay); 
+}, [searchTerm, currentPage, dispatch]);
 
   const onNavigate = (page, id = null) => {
     let url = `/${page}`;
@@ -96,10 +103,10 @@ export const PatientList = () => {
     navigate(url)
   }
 
-  const filteredPatients = patientList.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredPatients = patientList.filter(patient =>
+  //   patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   const handlePageChange = (page: number) => {
     console.log(page, "pp")
@@ -142,10 +149,10 @@ export const PatientList = () => {
                 className="pl-10 w-full sm:w-80"
               />
             </div>
-            <Button variant="medical" onClick={() => onNavigate("import")}>
+            {/* <Button variant="medical" onClick={() => onNavigate("import")}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
-            </Button>
+            </Button> */}
           </div>
         </div>
 
