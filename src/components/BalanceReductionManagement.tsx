@@ -9,7 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Layout } from "@/components/Layout";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { getCaseData } from "@/store/caseSlice";
+import { useAppDispatch } from "@/hooks/use-dispatch";
+import { useAppSelector } from "@/hooks/use-selector";
 
 interface BalanceReductionManagementProps {
   onNavigate: (page: string, appointmentId?: string) => void;
@@ -32,6 +35,9 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     4: false
   });
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { id } = useParams<{ id: string }>();
+  const caseData = useAppSelector(state => state.case.caseData)
 
   // Load progress from localStorage on component mount
   useEffect(() => {
@@ -45,6 +51,13 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       }
     }
   }, [appointmentId]);
+
+  useEffect(() => {
+    if (id) {
+      // Fetch case data using id if needed
+      dispatch(getCaseData({ id }));
+    }
+  }, [id]);
 
   // Save progress to localStorage whenever state changes
   const saveProgressToLocalStorage = (progress: CaseProgress, updatedBalance?: number, newStatus?: string) => {
@@ -95,14 +108,61 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   };
 
   const [expandedSteps, setExpandedSteps] = useState<number[]>([]);
-
-  const milestones = [
+  const [milestones, setMilestones] = useState([
     { id: 1, title: "Active Care", status: "completed" },
-    { id: 2, title: "Closed Records Sent", status: currentStep >= 2 ? "completed" : "pending" },
-    { id: 3, title: "Settled Pending Reductions", status: currentStep >= 3 ? "completed" : "pending" },
-    { id: 4, title: "Reductions Sent Pending Checks", status: currentStep >= 4 ? "completed" : "pending" },
-    { id: 5, title: "Closed Checks Received", status: currentStep >= 5 ? "completed" : "pending" }
-  ];
+    { id: 2, title: "Closed Records Sent", status: "pending" },
+    { id: 3, title: "Settled Pending Reductions", status: "pending " },
+    { id: 4, title: "Reductions Sent Pending Checks", status: "pending " },
+    { id: 5, title: "Closed Checks Received", status: "pending " },
+  ])
+
+  useEffect(() => {
+    let currentStep = 1;
+    //status:  ['Active', 'Record Sent', 'Pending Reductions', 'Pending Check', 'Closed']
+    switch (caseData?.status) {
+      case "Active":
+        currentStep = 1;
+        break;
+      case "Record Sent":
+        currentStep = 2;
+        break;
+      case "Pending Reductions":
+        currentStep = 3;
+        break;
+      case "Pending Check":
+        currentStep = 4;
+        break;
+      case "Closed":
+        currentStep = 5;
+        break;
+
+      default:
+        currentStep = 1;
+        break;
+    }
+    console.log(caseData, "ca1")
+    setMilestones([
+      { id: 1, title: "Active Care", status: "completed" },
+      { id: 2, title: "Closed Records Sent", status: currentStep >= 2 ? "completed" : "pending" },
+      { id: 3, title: "Settled Pending Reductions", status: currentStep >= 3 ? "completed" : "pending" },
+      { id: 4, title: "Reductions Sent Pending Checks", status: currentStep >= 4 ? "completed" : "pending" },
+      { id: 5, title: "Closed Checks Received", status: currentStep >= 5 ? "completed" : "pending" }
+    ])
+    let appointmentHistory = caseData?.appointments?.map((item, i) => {
+      return {
+        id: i + 1,
+        dateOfEntry: "2024-01-15",
+        dateRangeStart: "2024-01-15",
+        dateRangeEnd: "2024-02-15",
+        status: "pending",
+        notes: "Initial consultation - Active case",
+        // typeOfRequest: "Billing Update",
+        facilityProvider: item?.providerName,
+        procedureDate: item?.procedureDate,
+        billAmount: item?.currentBalance
+      }
+    })
+  }, [caseData])
 
   const statusSteps = [
     {

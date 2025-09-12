@@ -40,7 +40,7 @@ const App = () => {
                 <Route path="/patients" element={<PatientList />} />
 
                 <Route path="/patients/:id" element={<PatientDetailedInfo />} />
-                <Route path="/balance-reduction/:id" element={<BalanceReductionManagement />} />
+                <Route path="/patients/:patientId/cases/:id" element={<BalanceReductionManagement />} />
                 <Route path="/import" element={<CSVUpload />} />
 
                 <Route path="/reports" element={<Reports />} />
