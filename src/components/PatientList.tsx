@@ -18,6 +18,7 @@ import { useAppDispatch } from "@/hooks/use-dispatch";
 import { getPatientData } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
 import { Pagination } from "./common/Pagination";
+import { getCaseSummary } from "@/store/caseSlice";
 
 
 interface Patient {
@@ -32,8 +33,6 @@ interface Patient {
 }
 
 export const PatientList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
   // Sample data - in real app this would come from CSV import/API
   // const [patients] = useState<Patient[]>([
   //   {
@@ -85,9 +84,15 @@ export const PatientList = () => {
   console.log({
     patientData
   })
+  const [searchTerm, setSearchTerm] = useState("");
+   const { summary } =useAppSelector(state => state.case);
   // useEffect(() => {
   //   dispatch(getPatientData({ page: currentPage,search: searchTerm  }))
   // }, [currentPage,searchTerm])
+
+    useEffect(() => {
+    dispatch(getCaseSummary());
+  }, [dispatch]);
 
 useEffect(() => {
     const delay = setTimeout(() => {
@@ -258,18 +263,20 @@ useEffect(() => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{patientList.length}</div>
+                <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
                 <div className="text-sm text-muted-foreground">Total Patients</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-warning">
-                  {patientList.filter(p => p.status === 'active').length}
+                  {/* {patientList.filter(p => p.status === 'active').length} */}
+                  {summary?.activeCases || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Active Cases</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-success">
-                  {patientList.filter(p => p.status === 'completed').length}
+                  {/* {patientList.filter(p => p.status === 'completed').length} */}
+                  {summary?.completed || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Completed</div>
               </div>
