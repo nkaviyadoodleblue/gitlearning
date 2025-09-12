@@ -10,6 +10,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
 import { getPatientDetails } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
+import { getAllCaseData } from "@/store/caseSlice";
 
 interface CaseProgress {
   currentStep: number;
@@ -39,6 +40,7 @@ export const PatientDetailedInfo = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { patientDetails = {}, caseDetails, appointmentHistory } = useAppSelector(state => state.patient.patientDetails) || {};
+  const { list: caseList } = useAppSelector(state => state.case.caseList) || {};
   const { id } = useParams<{ id: string }>();
 
   const onNavigate = (page: string, id = null) => {
@@ -105,20 +107,23 @@ export const PatientDetailedInfo = () => {
   useEffect(() => {
     if (id) {
       dispatch(getPatientDetails(id));
+      dispatch(getAllCaseData({ id }));
     }
   }, [id]);
 
   // Function to calculate progress percentage
-  const getProgressPercentage = (progress: CaseProgress) => {
-    const completedSteps = Object.values(progress.stepCompletionStatus).filter(Boolean).length;
+  const getProgressPercentage = (progress: any[]) => {
+    const completedSteps = progress?.filter(item => item?.state === "Completed").length;
     return Math.round((completedSteps / 4) * 100);
   };
 
   // Function to get progress status text
-  const getProgressStatus = (progress: CaseProgress) => {
-    const completedSteps = Object.values(progress.stepCompletionStatus).filter(Boolean).length;
-    if (completedSteps === 0) return "Not Started";
-    if (completedSteps === 4) return "Completed";
+  const getProgressStatus = (progress: any[]) => {
+    // const completedSteps = Object.values(progress.stepCompletionStatus).filter(Boolean).length;
+    // if (completedSteps === 0) return "Not Started";
+    // if (completedSteps === 4) return "Completed";
+
+    const completedSteps = progress?.filter(item => item?.state === "Completed").length;
     return `${completedSteps}/4 Steps Complete`;
   };
 
@@ -143,8 +148,9 @@ export const PatientDetailedInfo = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active": return "bg-medical-success text-medical-success-foreground";
-      case "Pending": return "bg-medical-warning text-medical-warning-foreground";
-      case "Completed": return "bg-medical-info text-medical-info-foreground";
+      case "Pending Reductions": return "bg-medical-warning text-medical-warning-foreground";
+      case "Pending Check": return "bg-medical-warning text-medical-warning-foreground";
+      case "Closed": return "bg-medical-info text-medical-info-foreground";
       default: return "bg-muted text-muted-foreground";
     }
   };
@@ -254,14 +260,14 @@ export const PatientDetailedInfo = () => {
         {/* Appointments Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-medical-dark">Appointment History</CardTitle>
+            <CardTitle className="text-medical-dark">Case Details</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-medical-dark font-semibold">Service Provider Name</TableHead>
-                  <TableHead className="text-medical-dark font-semibold">Treatment Details</TableHead>
+                  <TableHead className="text-medical-dark font-semibold">SI NO.</TableHead>
+                  {/* <TableHead className="text-medical-dark font-semibold">Case Details</TableHead> */}
                   <TableHead className="text-medical-dark font-semibold">Current Balance</TableHead>
                   <TableHead className="text-medical-dark font-semibold">Final Balance</TableHead>
                   <TableHead className="text-medical-dark font-semibold">Status</TableHead>
@@ -270,27 +276,31 @@ export const PatientDetailedInfo = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {appointments.map((appointment) => (
+                {caseList.map((appointment = {}, i) => (
                   <TableRow key={appointment.id} className="hover:bg-medical-background/50">
                     <TableCell className="font-medium text-medical-dark">
-                      {appointment.serviceProvider}
+                      {i + 1}
                     </TableCell>
-                    <TableCell className="text-medical-muted">
+                    {/* <TableCell className="text-medical-muted">
                       {appointment.treatmentDetails}
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell className="font-semibold text-medical-dark">
-                      ${appointment.currentBalance.toLocaleString()}
+                      ${appointment.totalAccountBalance?.toLocaleString()}
                     </TableCell>
-                    <TableCell>
+
+                    <TableCell className="font-semibold text-medical-dark">
+                      ${appointment.totalAccountBalance?.toLocaleString()}
+                    </TableCell>
+                    {/* <TableCell>
                       <div className="font-semibold text-medical-primary">
-                        ${calculateFinalBalance(appointment.currentBalance, appointment.caseProgress).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                       ${calculateFinalBalance(appointment.currentBalance, appointment.caseProgress).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
-                      {Object.values(appointment.caseProgress.stepCompletionStatus).filter(Boolean).length > 0 && (
+                       {Object.values(appointment.caseProgress.stepCompletionStatus).filter(Boolean).length > 0 && (
                         <div className="text-xs text-medical-muted mt-1">
                           {(((appointment.currentBalance - calculateFinalBalance(appointment.currentBalance, appointment.caseProgress)) / appointment.currentBalance) * 100).toFixed(1)}% reduction
                         </div>
-                      )}
-                    </TableCell>
+                      )} 
+                    </TableCell> */}
                     <TableCell>
                       <Badge className={getStatusColor(appointment.status)}>
                         {appointment.status}
@@ -301,15 +311,15 @@ export const PatientDetailedInfo = () => {
                         <div className="flex items-center gap-2">
                           <BarChart3 className="h-4 w-4 text-medical-primary" />
                           <span className="text-sm font-medium text-medical-dark">
-                            {getProgressStatus(appointment.caseProgress)}
+                            {getProgressStatus(appointment.caseSteps)}
                           </span>
                         </div>
                         <Progress
-                          value={getProgressPercentage(appointment.caseProgress)}
+                          value={getProgressPercentage(appointment.caseSteps)}
                           className="h-2"
                         />
                         <div className="text-xs text-medical-muted">
-                          {getProgressPercentage(appointment.caseProgress)}% Complete
+                          {getProgressPercentage(appointment.caseSteps)}% Complete
                         </div>
                       </div>
                     </TableCell>
@@ -318,7 +328,7 @@ export const PatientDetailedInfo = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => navigate("/balance-reduction/" + appointment.id)}
+                          onClick={() => navigate(`/patients/${id}/cases/${appointment._id}`)}
                           className="h-8 w-8 p-0 text-medical-primary hover:text-medical-primary/80"
                         >
                           <Edit className="h-4 w-4" />
