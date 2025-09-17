@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Layout } from "@/components/Layout";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useNavigate, useParams } from "react-router-dom";
-import { getCaseData } from "@/store/caseSlice";
+import { getCaseData, updateAppointments, updateCaseStep } from "@/store/caseSlice";
 import { useAppDispatch } from "@/hooks/use-dispatch";
 import { useAppSelector } from "@/hooks/use-selector";
 
@@ -40,17 +40,17 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const caseData = useAppSelector(state => state.case.caseData)
 
   // Load progress from localStorage on component mount
-  useEffect(() => {
-    const savedProgress = localStorage.getItem('appointmentProgress');
-    if (savedProgress) {
-      const progressData = JSON.parse(savedProgress);
-      const appointmentData = progressData[appointmentId];
-      if (appointmentData?.caseProgress) {
-        setCurrentStep(appointmentData.caseProgress.currentStep);
-        setStepCompletionStatus(appointmentData.caseProgress.stepCompletionStatus);
-      }
-    }
-  }, [appointmentId]);
+  // useEffect(() => {
+  // const savedProgress = localStorage.getItem('appointmentProgress');
+  // if (savedProgress) {
+  //   const progressData = JSON.parse(savedProgress);
+  //   const appointmentData = progressData[appointmentId];
+  //   if (appointmentData?.caseProgress) {
+  //     setCurrentStep(appointmentData.caseProgress.currentStep);
+  //     setStepCompletionStatus(appointmentData.caseProgress.stepCompletionStatus);
+  //   }
+  // }
+  // }, [appointmentId]);
 
   useEffect(() => {
     if (id) {
@@ -60,45 +60,20 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   }, [id]);
 
   // Save progress to localStorage whenever state changes
-  const saveProgressToLocalStorage = (progress: CaseProgress, updatedBalance?: number, newStatus?: string) => {
-    const savedProgress = localStorage.getItem('appointmentProgress');
-    const progressData = savedProgress ? JSON.parse(savedProgress) : {};
+  // const saveProgressToLocalStorage = (progress: CaseProgress, updatedBalance?: number, newStatus?: string) => {
+  //   const savedProgress = localStorage.getItem('appointmentProgress');
+  //   const progressData = savedProgress ? JSON.parse(savedProgress) : {};
 
-    progressData[appointmentId] = {
-      caseProgress: progress,
-      currentBalance: updatedBalance,
-      status: newStatus
-    };
+  //   progressData[appointmentId] = {
+  //     caseProgress: progress,
+  //     currentBalance: updatedBalance,
+  //     status: newStatus
+  //   };
 
-    localStorage.setItem('appointmentProgress', JSON.stringify(progressData));
-  };
+  //   localStorage.setItem('appointmentProgress', JSON.stringify(progressData));
+  // };
 
-  const [appointmentHistory, setAppointmentHistory] = useState([
-    {
-      id: "1",
-      dateOfEntry: "2024-01-15",
-      dateRangeStart: "2024-01-15",
-      dateRangeEnd: "2024-02-15",
-      status: "Completed",
-      notes: "Initial consultation - Active case",
-      typeOfRequest: "Billing Update",
-      facilityProvider: "Texas Ortho Spine Center (Bashir)",
-      procedureDate: "2024-01-10",
-      billAmount: 2450.00
-    },
-    {
-      id: "2",
-      dateOfEntry: "2024-01-20",
-      dateRangeStart: "2024-01-20",
-      dateRangeEnd: "2024-02-20",
-      status: "Pending",
-      notes: "Follow-up treatment - Active",
-      typeOfRequest: "Balance Only",
-      facilityProvider: "NuAdvance Orthopedics",
-      procedureDate: "2024-01-18",
-      billAmount: 1200.00
-    }
-  ]);
+  const [appointmentHistory, setAppointmentHistory] = useState([]);
 
   // Function to calculate final balance after reductions
   const calculateFinalBalance = (billAmount: number) => {
@@ -149,18 +124,26 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       { id: 5, title: "Closed Checks Received", status: currentStep >= 5 ? "completed" : "pending" }
     ])
     let appointmentHistory = caseData?.appointments?.map((item, i) => {
+      console.log("item?.procedureDate", item?.procedureDate)
       return {
         id: i + 1,
-        dateOfEntry: "2024-01-15",
-        dateRangeStart: "2024-01-15",
-        dateRangeEnd: "2024-02-15",
-        status: "pending",
+        dateOfEntry: new Date(item?.createdAt).toISOString().split("T")[0],
+        // dateRangeStart: "2024-01-15",
+        // dateRangeEnd: "2024-02-15",
+        status: "Pending",
         notes: "Initial consultation - Active case",
-        // typeOfRequest: "Billing Update",
+        typeOfRequest: "without Affidavit",
         facilityProvider: item?.providerName,
-        procedureDate: item?.procedureDate,
+        procedureDate: new Date(item?.procedureDate).toISOString().split("T")[0], // "2024-01-18"
         billAmount: item?.currentBalance
       }
+    })
+    setAppointmentHistory(appointmentHistory || [])
+    setStepCompletionStatus({
+      1: caseData?.caseSteps[0].status === "Completed",
+      2: caseData?.caseSteps[1].status === "Completed",
+      3: caseData?.caseSteps[2].status === "Completed",
+      4: caseData?.caseSteps[3].status === "Completed"
     })
   }, [caseData])
 
@@ -206,55 +189,60 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     setCurrentStep(newCurrentStep);
 
     // Save progress to localStorage
-    saveProgressToLocalStorage({
-      currentStep: newCurrentStep,
-      stepCompletionStatus,
-      totalBillValue
-    });
+    // saveProgressToLocalStorage({
+    //   currentStep: newCurrentStep,
+    //   stepCompletionStatus,
+    //   totalBillValue
+    // });
 
     alert("Case has been closed and moved to Step 1!");
   };
 
   const markStepComplete = (stepId: number) => {
+    console.log(stepId)
+    const step = caseData?.caseSteps[stepId - 1];
+    console.log(step)
+    if (step?._id && id)
+      dispatch(updateCaseStep({ id, stepId: step._id, reductionAmount }))
     // Validation: Check if previous steps are completed before allowing current step completion
-    const canCompleteStep = validateStepCompletion(stepId);
+    // const canCompleteStep = validateStepCompletion(stepId);
 
-    if (!canCompleteStep.isValid) {
-      alert(canCompleteStep.message);
-      return;
-    }
+    // if (!canCompleteStep.isValid) {
+    //   alert(canCompleteStep.message);
+    //   return;
+    // }
 
-    const newStepCompletionStatus = {
-      ...stepCompletionStatus,
-      [stepId]: true
-    };
+    // const newStepCompletionStatus = {
+    //   ...stepCompletionStatus,
+    //   [stepId]: true
+    // };
 
-    setStepCompletionStatus(newStepCompletionStatus);
+    // setStepCompletionStatus(newStepCompletionStatus);
 
-    // Update current step to next step if this wasn't the last step
-    const newCurrentStep = stepId < 4 ? stepId + 1 : currentStep;
-    if (newCurrentStep !== currentStep) {
-      setCurrentStep(newCurrentStep);
-    }
+    // // Update current step to next step if this wasn't the last step
+    // const newCurrentStep = stepId < 4 ? stepId + 1 : currentStep;
+    // if (newCurrentStep !== currentStep) {
+    //   setCurrentStep(newCurrentStep);
+    // }
 
-    // Calculate new balance (reduce by 10% per completed step for demo)
-    const completedSteps = Object.values(newStepCompletionStatus).filter(Boolean).length;
-    const newBalance = totalBillValue * (1 - (completedSteps * 0.1));
+    // // Calculate new balance (reduce by 10% per completed step for demo)
+    // const completedSteps = Object.values(newStepCompletionStatus).filter(Boolean).length;
+    // const newBalance = totalBillValue * (1 - (completedSteps * 0.1));
 
-    // Determine new status based on completion
-    let newStatus = "Active";
-    if (completedSteps === 4) {
-      newStatus = "Completed";
-    } else if (completedSteps > 0) {
-      newStatus = "In Progress";
-    }
+    // // Determine new status based on completion
+    // let newStatus = "Active";
+    // if (completedSteps === 4) {
+    //   newStatus = "Completed";
+    // } else if (completedSteps > 0) {
+    //   newStatus = "In Progress";
+    // }
 
     // Save progress to localStorage
-    saveProgressToLocalStorage({
-      currentStep: newCurrentStep,
-      stepCompletionStatus: newStepCompletionStatus,
-      totalBillValue: totalBillValue
-    }, newBalance, newStatus);
+    // saveProgressToLocalStorage({
+    //   currentStep: newCurrentStep,
+    //   stepCompletionStatus: newStepCompletionStatus,
+    //   totalBillValue: totalBillValue
+    // }, newBalance, newStatus);
 
     alert(`Step ${stepId} has been marked as complete!`);
   };
@@ -296,7 +284,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       dateRangeEnd: "",
       status: "Pending",
       notes: "",
-      typeOfRequest: "Billing Update",
+      typeOfRequest: "without Affidavit",
       facilityProvider: "",
       procedureDate: "",
       billAmount: 0
@@ -309,6 +297,14 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       prev.map(row => row.id === id ? { ...row, [field]: value } : row)
     );
   };
+
+  const handleUpdate = () => {
+    console.log(appointmentHistory)
+    dispatch(updateAppointments({
+      caseId: id,
+      appointments: appointmentHistory
+    }))
+  }
 
   return (
     <Layout title="Balance Reduction Management" >
@@ -364,10 +360,16 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-medical-dark">Appointment History</CardTitle>
-            <Button onClick={addNewRow} size="sm" className="bg-medical-primary hover:bg-medical-primary/90">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Entry
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={addNewRow} size="sm" className="bg-medical-primary hover:bg-medical-primary/90">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Entry
+              </Button>
+              <Button size="sm" onClick={handleUpdate} className="bg-medical-secondary hover:bg-medical-secondary/90">
+                {/* <Plus className="h-4 w-4 mr-2" /> */}
+                Update
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -426,7 +428,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select value={row.facilityProvider} onValueChange={(value) => updateRow(row.id, "facilityProvider", value)}>
+                        {/* <Select value={row.facilityProvider} onValueChange={(value) => updateRow(row.id, "facilityProvider", value)}>
                           <SelectTrigger className="border-medical-border">
                             <SelectValue placeholder="Select provider..." />
                           </SelectTrigger>
@@ -436,7 +438,16 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                             <SelectItem value="Metro Pain Management">Metro Pain Management</SelectItem>
                             <SelectItem value="Dallas Sports Medicine">Dallas Sports Medicine</SelectItem>
                           </SelectContent>
-                        </Select>
+                        </Select> */}
+
+                        <Input
+                          type="text"
+                          value={row.facilityProvider}
+                          onChange={(e) => updateRow(row.id, "facilityProvider", e.target.value)}
+                          className="border-medical-border"
+                          placeholder="Provider name"
+                        // step="0.01"
+                        />
                       </TableCell>
                       <TableCell>
                         <Input
