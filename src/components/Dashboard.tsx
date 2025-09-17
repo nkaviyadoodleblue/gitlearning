@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import {
   Activity
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAppSelector } from "@/hooks/use-selector";
+import { getCaseStatus, getCaseSummary } from "@/store/caseSlice";
+import { useAppDispatch } from "@/hooks/use-dispatch";
 
 export const Dashboard = () => {
   const [stats] = useState({
@@ -25,19 +28,21 @@ export const Dashboard = () => {
   });
 
   const navigate = useNavigate();
-
+  const dispatch = useAppDispatch();
+const { summary } =useAppSelector(state => state.case);
+const { caseStatus } =useAppSelector(state => state.case);
   const onNavigate = (page) => {
     navigate(`/${page}`)
   }
 
   const quickActions = [
-    {
-      title: "Import Case Data",
-      description: "Upload CSV file with patient information",
-      icon: Upload,
-      action: () => onNavigate("import"),
-      variant: "medical" as const
-    },
+    // {
+    //   title: "Import Case Data",
+    //   description: "Upload CSV file with patient information",
+    //   icon: Upload,
+    //   action: () => onNavigate("import"),
+    //   variant: "medical" as const
+    // },
     {
       title: "View Patients",
       description: "Manage patient cases and balances",
@@ -60,6 +65,14 @@ export const Dashboard = () => {
     { action: "Provider follow-up scheduled", time: "1 day ago", type: "warning" },
     { action: "Case closed - payment received", time: "2 days ago", type: "success" }
   ];
+
+useEffect(() => {
+    dispatch(getCaseSummary());
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(getCaseStatus());
+  }, [dispatch]);
 
   return (
     <Layout title="Dashboard" showHomeButton={false}>
@@ -87,11 +100,11 @@ export const Dashboard = () => {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{stats.totalPatients}</div>
-              <p className="text-xs text-muted-foreground">
+              <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
+              {/* <p className="text-xs text-muted-foreground">
                 <TrendingUp className="inline h-3 w-3 mr-1" />
                 +12% from last month
-              </p>
+              </p> */}
             </CardContent>
           </Card>
 
@@ -101,7 +114,7 @@ export const Dashboard = () => {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-medical-warning">{stats.activeCases}</div>
+              <div className="text-2xl font-bold text-medical-warning">{summary?.activeCases || 0}</div>
               <p className="text-xs text-muted-foreground">Currently in progress</p>
             </CardContent>
           </Card>
@@ -113,8 +126,8 @@ export const Dashboard = () => {
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-medical-success">{stats.completedCases}</div>
-              <p className="text-xs text-muted-foreground">This month</p>
+              <div className="text-2xl font-bold text-medical-success">{summary?.completed || 0}</div>
+              {/* <p className="text-xs text-muted-foreground">This month</p> */}
             </CardContent>
           </Card>
         </div>
@@ -183,15 +196,15 @@ export const Dashboard = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center p-4 bg-accent/30 rounded-lg">
-                <div className="text-2xl font-bold text-medical-warning mb-1">{stats.pendingReductions}</div>
+                <div className="text-2xl font-bold text-medical-warning mb-1">{caseStatus?.pendingReductions || 0}</div>
                 <Badge variant="outline" className="text-xs">Pending Reductions</Badge>
               </div>
               <div className="text-center p-4 bg-accent/30 rounded-lg">
-                <div className="text-2xl font-bold text-primary mb-1">{stats.activeCases}</div>
+                <div className="text-2xl font-bold text-primary mb-1">{caseStatus?.activeCases || 0}</div>
                 <Badge variant="outline" className="text-xs">Active Cases</Badge>
               </div>
               <div className="text-center p-4 bg-accent/30 rounded-lg">
-                <div className="text-2xl font-bold text-medical-success mb-1">{stats.completedCases}</div>
+                <div className="text-2xl font-bold text-medical-success mb-1">{caseStatus?.completedCases || 0}</div>
                 <Badge variant="outline" className="text-xs">Completed</Badge>
               </div>
             </div>

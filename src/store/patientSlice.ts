@@ -55,7 +55,14 @@ export default patientSlice.reducer;
 
 export const getPatientData = ({ page = 1, limit = 10, search = "" }): AppThunk<boolean> => async (dispatch, _getState, client) => {
     dispatch(setIsLoading(true))
-    const { data, message, status } = await client.get("/patients?page=" + (page || 1) + "&limit=" + limit);
+    // const { data, message, status } = await client.get("/patients?page=" + (page || 1) + "&limit=" + limit);
+//     const { data, message, status } = await client.get(
+//     `/patients?page=${page || 1}&limit=${limit}&search=${encodeURIComponent(search)}`
+//   );
+const query = `/patients?page=${page || 1}&limit=${limit}` + (search ? `&search=${encodeURIComponent(search)}` : '');
+
+const { data, message, status } = await client.get(query);
+
     if (status) {
         dispatch(setPatientList({
             list: data?.data.list,

@@ -18,6 +18,7 @@ import { useAppDispatch } from "@/hooks/use-dispatch";
 import { getPatientData } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
 import { Pagination } from "./common/Pagination";
+import { getCaseSummary } from "@/store/caseSlice";
 
 
 interface Patient {
@@ -32,8 +33,6 @@ interface Patient {
 }
 
 export const PatientList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
   // Sample data - in real app this would come from CSV import/API
   // const [patients] = useState<Patient[]>([
   //   {
@@ -85,10 +84,23 @@ export const PatientList = () => {
   console.log({
     patientData
   })
-  useEffect(() => {
-    dispatch(getPatientData({ page: currentPage }))
-  }, [])
+  const [searchTerm, setSearchTerm] = useState("");
+   const { summary } =useAppSelector(state => state.case);
+  // useEffect(() => {
+  //   dispatch(getPatientData({ page: currentPage,search: searchTerm  }))
+  // }, [currentPage,searchTerm])
 
+    useEffect(() => {
+    dispatch(getCaseSummary());
+  }, [dispatch]);
+
+useEffect(() => {
+    const delay = setTimeout(() => {
+        dispatch(getPatientData({ page: currentPage, search: searchTerm }));
+    }, 500); 
+
+    return () => clearTimeout(delay); 
+}, [searchTerm, currentPage, dispatch]);
 
   const onNavigate = (page, id = null) => {
     let url = `/${page}`;
@@ -96,10 +108,10 @@ export const PatientList = () => {
     navigate(url)
   }
 
-  const filteredPatients = patientList.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredPatients = patientList.filter(patient =>
+  //   patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   const handlePageChange = (page: number) => {
     console.log(page, "pp")
@@ -142,10 +154,10 @@ export const PatientList = () => {
                 className="pl-10 w-full sm:w-80"
               />
             </div>
-            <Button variant="medical" onClick={() => onNavigate("import")}>
+            {/* <Button variant="medical" onClick={() => onNavigate("import")}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -251,18 +263,20 @@ export const PatientList = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{patientList.length}</div>
+                <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
                 <div className="text-sm text-muted-foreground">Total Patients</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-warning">
-                  {patientList.filter(p => p.status === 'active').length}
+                  {/* {patientList.filter(p => p.status === 'active').length} */}
+                  {summary?.activeCases || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Active Cases</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-medical-success">
-                  {patientList.filter(p => p.status === 'completed').length}
+                  {/* {patientList.filter(p => p.status === 'completed').length} */}
+                  {summary?.completed || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Completed</div>
               </div>
