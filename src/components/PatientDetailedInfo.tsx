@@ -210,20 +210,26 @@ export const PatientDetailedInfo = () => {
                 <label className="text-sm font-medium text-medical-muted">Total Account Balance</label>
                 <div className="space-y-2">
                   <div className="text-xl font-bold text-medical-dark">
-                    ${appointments.reduce((total, appointment) => total + appointment.currentBalance, 0).toLocaleString()}
+                    ${caseList.reduce((total, appointment) => total + appointment.totalAccountBalance, 0).toLocaleString()}
                   </div>
                   <div className="text-lg font-semibold text-medical-primary">
-                    Final: ${appointments.reduce((total, appointment) =>
-                      total + calculateFinalBalance(appointment.currentBalance, appointment.caseProgress), 0
-                    ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    Final:
+                    ${caseList.reduce((total, appointment) => total + appointment.finalAccountBalance, 0).toLocaleString()}
+                    {/* ${patient.finalAccountBalance} */}
+                    {/* ${appointments.reduce((total, appointment) =>
+                      total + calculateFinalBalance(appointment.finalAccountBalance, appointment.caseProgress), 0
+                    ).toLocaleString('en-US', { minimumFractionDigits: 2 })} */}
                   </div>
                   <div className="text-sm text-medical-muted">
-                    Total Savings: ${(
+                    Total Savings:
+                    ${caseList.reduce((total, appointment) => total + (+appointment.reductionAmount || 0), 0).toLocaleString()}
+
+                    {/* ${(
                       appointments.reduce((total, appointment) => total + appointment.currentBalance, 0) -
                       appointments.reduce((total, appointment) =>
                         total + calculateFinalBalance(appointment.currentBalance, appointment.caseProgress), 0
                       )
-                    ).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    ).toLocaleString('en-US', { minimumFractionDigits: 2 })} */}
                   </div>
                 </div>
               </div>
@@ -260,14 +266,15 @@ export const PatientDetailedInfo = () => {
         {/* Appointments Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-medical-dark">Case Details</CardTitle>
+            <CardTitle className="text-medical-dark">Appointment History</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-medical-dark font-semibold">SI NO.</TableHead>
-                  {/* <TableHead className="text-medical-dark font-semibold">Case Details</TableHead> */}
+                  <TableHead className="text-medical-dark font-semibold">Service Provider Name	</TableHead>
+                  <TableHead className="text-medical-dark font-semibold">Treatment Details</TableHead>
                   <TableHead className="text-medical-dark font-semibold">Current Balance</TableHead>
                   <TableHead className="text-medical-dark font-semibold">Final Balance</TableHead>
                   <TableHead className="text-medical-dark font-semibold">Status</TableHead>
@@ -281,6 +288,12 @@ export const PatientDetailedInfo = () => {
                     <TableCell className="font-medium text-medical-dark">
                       {i + 1}
                     </TableCell>
+                    <TableCell className="text-medical-muted">
+                      {appointment?.providerName}
+                    </TableCell>
+                    <TableCell className="text-medical-muted">
+                      {appointment?.treatmentDetails}
+                    </TableCell>
                     {/* <TableCell className="text-medical-muted">
                       {appointment.treatmentDetails}
                     </TableCell> */}
@@ -289,7 +302,7 @@ export const PatientDetailedInfo = () => {
                     </TableCell>
 
                     <TableCell className="font-semibold text-medical-dark">
-                      ${appointment.totalAccountBalance?.toLocaleString()}
+                      ${appointment.finalAccountBalance?.toLocaleString()}
                     </TableCell>
                     {/* <TableCell>
                       <div className="font-semibold text-medical-primary">
