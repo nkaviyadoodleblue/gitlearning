@@ -335,7 +335,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
           <CardContent>
             <div className="flex items-center justify-between relative">
               {milestones.map((milestone, index) => (
-                <div key={milestone.id} className="flex flex-col items-center relative z-10">
+                <div key={milestone.id} className="flex-1 flex-col items-center relative z-10">
                   <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${milestone.status === "completed"
                     ? "bg-medical-success border-medical-success text-white"
                     : "bg-orange-100 border-orange-400 text-orange-600"
@@ -351,7 +351,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                     {milestone.title}
                   </span>
                   {index < milestones.length - 1 && (
-                    <div className={`absolute top-5 left-10 w-[calc(100vw/5-2.5rem)] h-0.5 ${milestones[index + 1].status === "completed" ? "bg-medical-success" : "bg-medical-border"
+                    <div className={`absolute top-5 left-10 w-[calc(100vw/5.5-3rem)] h-0.5 ${milestones[index + 1].status === "completed" ? "bg-medical-success" : "bg-medical-border"
                       }`} />
                   )}
                 </div>
