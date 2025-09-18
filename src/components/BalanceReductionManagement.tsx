@@ -28,6 +28,7 @@ interface CaseProgress {
 export const BalanceReductionManagement = ({ onNavigate, appointmentId }: BalanceReductionManagementProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [reductionAmount, setReductionAmount] = useState(0);
+  const [chequeNo, setChequeNo] = useState("");
   const [stepCompletionStatus, setStepCompletionStatus] = useState({
     1: false,
     2: false,
@@ -115,7 +116,6 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
         currentStep = 1;
         break;
     }
-    console.log(caseData, "ca1")
     setMilestones([
       { id: 1, title: "Active Care", status: "completed" },
       { id: 2, title: "Closed Records Sent", status: currentStep >= 2 ? "completed" : "pending" },
@@ -145,6 +145,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       3: caseData?.caseSteps[2].status === "Completed",
       4: caseData?.caseSteps[3].status === "Completed"
     })
+    setReductionAmount(caseData?.reductionAmount)
+    setChequeNo(caseData?.chequeNo)
   }, [caseData])
 
   const statusSteps = [
@@ -203,7 +205,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     const step = caseData?.caseSteps[stepId - 1];
     console.log(step)
     if (step?._id && id)
-      dispatch(updateCaseStep({ id, stepId: step._id, reductionAmount }))
+      dispatch(updateCaseStep({ id, stepId: step._id, reductionAmount, chequeNo }))
     // Validation: Check if previous steps are completed before allowing current step completion
     // const canCompleteStep = validateStepCompletion(stepId);
 
@@ -360,7 +362,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-medical-dark">Appointment History</CardTitle>
-            <div className="flex gap-2">
+            {caseData?.status == "Active" ? <div className="flex gap-2">
               <Button onClick={addNewRow} size="sm" className="bg-medical-primary hover:bg-medical-primary/90">
                 <Plus className="h-4 w-4 mr-2" />
                 Add Entry
@@ -369,7 +371,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                 {/* <Plus className="h-4 w-4 mr-2" /> */}
                 Update
               </Button>
-            </div>
+            </div> : ""}
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -393,12 +395,16 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                         <Input
                           type="date"
                           value={row.dateOfEntry}
+                          disabled={caseData?.status != "Active"}
                           onChange={(e) => updateRow(row.id, "dateOfEntry", e.target.value)}
                           className="border-medical-border"
                         />
                       </TableCell>
                       <TableCell>
-                        <Select value={row.status} onValueChange={(value) => updateRow(row.id, "status", value)}>
+                        <Select value={row.status}
+
+                          disabled={caseData?.status != "Active"}
+                          onValueChange={(value) => updateRow(row.id, "status", value)}>
                           <SelectTrigger className="border-medical-border">
                             <SelectValue />
                           </SelectTrigger>
@@ -410,6 +416,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                       </TableCell>
                       <TableCell>
                         <Textarea
+
+                          disabled={caseData?.status != "Active"}
                           value={row.notes}
                           onChange={(e) => updateRow(row.id, "notes", e.target.value)}
                           className="border-medical-border min-h-[60px]"
@@ -417,7 +425,10 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                         />
                       </TableCell>
                       <TableCell>
-                        <Select value={row.typeOfRequest} onValueChange={(value) => updateRow(row.id, "typeOfRequest", value)}>
+                        <Select
+
+                          disabled={caseData?.status != "Active"}
+                          value={row.typeOfRequest} onValueChange={(value) => updateRow(row.id, "typeOfRequest", value)}>
                           <SelectTrigger className="border-medical-border">
                             <SelectValue />
                           </SelectTrigger>
@@ -442,6 +453,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
 
                         <Input
                           type="text"
+
+                          disabled={caseData?.status != "Active"}
                           value={row.facilityProvider}
                           onChange={(e) => updateRow(row.id, "facilityProvider", e.target.value)}
                           className="border-medical-border"
@@ -452,6 +465,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                       <TableCell>
                         <Input
                           type="date"
+
+                          disabled={caseData?.status != "Active"}
                           value={row.procedureDate}
                           onChange={(e) => updateRow(row.id, "procedureDate", e.target.value)}
                           className="border-medical-border"
@@ -460,6 +475,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                       <TableCell>
                         <Input
                           type="number"
+
+                          disabled={caseData?.status != "Active"}
                           value={row.billAmount}
                           onChange={(e) => updateRow(row.id, "billAmount", parseFloat(e.target.value) || 0)}
                           className="border-medical-border"
@@ -473,6 +490,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                             <label className="text-xs text-medical-muted">Start Date</label>
                             <Input
                               type="date"
+
+                              disabled={caseData?.status != "Active"}
                               value={row.dateRangeStart}
                               onChange={(e) => updateRow(row.id, "dateRangeStart", e.target.value)}
                               className="border-medical-border"
@@ -482,6 +501,8 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                             <label className="text-xs text-medical-muted">End Date</label>
                             <Input
                               type="date"
+
+                              disabled={caseData?.status != "Active"}
                               value={row.dateRangeEnd}
                               onChange={(e) => updateRow(row.id, "dateRangeEnd", e.target.value)}
                               className="border-medical-border"
@@ -508,7 +529,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
         </Card>
 
         {/* Close Case Button - Moved outside of card for better visibility */}
-        <div className="flex justify-center">
+        {/* <div className="flex justify-center">
           <Button
             onClick={handleCloseCase}
             size="lg"
@@ -517,7 +538,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
           >
             {currentStep >= 5 ? "Case Closed" : "Close the Case"}
           </Button>
-        </div>
+        </div> */}
 
         {/* Reopening card structure for status cards */}
         <Card className="border-0 shadow-none bg-transparent">
@@ -615,6 +636,25 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                               <span className="font-semibold">
                                 ${(totalBillValue - reductionAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                               </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {step.id === 4 && (
+                        <div className="space-y-4 p-4 bg-medical-background rounded-lg">
+                          <h4 className="font-semibold text-medical-dark">Cheque No:</h4>
+                          <div className="grid grid-cols-2 gap-4">
+
+                            <div>
+                              {/* <label className="text-sm font-medium text-medical-dark">Reduction Amount</label> */}
+                              <Input
+                                type="text"
+                                value={chequeNo}
+                                onChange={(e) => setChequeNo(e.target.value)}
+                                placeholder="Enter cheque no"
+                                className="border-medical-border"
+                              />
                             </div>
                           </div>
                         </div>

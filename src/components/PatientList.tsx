@@ -85,22 +85,22 @@ export const PatientList = () => {
     patientData
   })
   const [searchTerm, setSearchTerm] = useState("");
-   const { summary } =useAppSelector(state => state.case);
+  const { summary } = useAppSelector(state => state.case);
   // useEffect(() => {
   //   dispatch(getPatientData({ page: currentPage,search: searchTerm  }))
   // }, [currentPage,searchTerm])
 
-    useEffect(() => {
+  useEffect(() => {
     dispatch(getCaseSummary());
   }, [dispatch]);
 
-useEffect(() => {
+  useEffect(() => {
     const delay = setTimeout(() => {
-        dispatch(getPatientData({ page: currentPage, search: searchTerm }));
-    }, 500); 
+      dispatch(getPatientData({ page: currentPage, search: searchTerm }));
+    }, 500);
 
-    return () => clearTimeout(delay); 
-}, [searchTerm, currentPage, dispatch]);
+    return () => clearTimeout(delay);
+  }, [searchTerm, currentPage, dispatch]);
 
   const onNavigate = (page, id = null) => {
     let url = `/${page}`;
@@ -195,7 +195,7 @@ useEffect(() => {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Gender:</span>
                   </div>
-                  <span className="font-medium">{patient.gender}</span>
+                  <span className="font-medium">{"Male"}</span>
 
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />

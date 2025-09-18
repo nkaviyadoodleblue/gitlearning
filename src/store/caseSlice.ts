@@ -126,10 +126,10 @@ export const getCaseData = ({ id }): AppThunk<boolean> => async (dispatch, _getS
     return status;
 };
 
-export const updateCaseStep = ({ id, stepId, reductionAmount }): AppThunk<void> => async (dispatch, _getState, client) => {
+export const updateCaseStep = ({ id, stepId, reductionAmount, chequeNo }): AppThunk<void> => async (dispatch, _getState, client) => {
     dispatch(setIsStepLoading(true))
     dispatch(setCaseData(null))
-    const { data, message, status } = await client.put(`/cases/${id}/steps/${stepId}`, { reductionAmount });
+    const { data, message, status } = await client.put(`/cases/${id}/steps/${stepId}`, { reductionAmount, chequeNo });
     console.log(data, message, status);
     if (status) {
         dispatch(setCaseData(data?.data))
