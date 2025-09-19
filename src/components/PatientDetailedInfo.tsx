@@ -113,7 +113,7 @@ export const PatientDetailedInfo = () => {
 
   // Function to calculate progress percentage
   const getProgressPercentage = (progress: any[]) => {
-    const completedSteps = progress?.filter(item => item?.state === "Completed").length;
+    const completedSteps = progress?.filter(item => item?.status === "Completed").length;
     return Math.round((completedSteps / 4) * 100);
   };
 
@@ -123,7 +123,7 @@ export const PatientDetailedInfo = () => {
     // if (completedSteps === 0) return "Not Started";
     // if (completedSteps === 4) return "Completed";
 
-    const completedSteps = progress?.filter(item => item?.state === "Completed").length;
+    const completedSteps = progress?.filter(item => item?.status === "Completed").length;
     return `${completedSteps}/4 Steps Complete`;
   };
 
