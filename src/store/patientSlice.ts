@@ -96,3 +96,34 @@ export const getPatientDetails = (id: string): AppThunk<boolean> => async (dispa
     dispatch(setIsPatientDetailsLoading(false))
     return status;
 };
+
+
+
+export const fetchPatients = (): AppThunk => async (dispatch, _getState, client) => {
+  try {
+    dispatch(setIsLoading(true));
+    const { data, status, message } = await client.get("/patients?page=1&limit=1000");
+
+    if (status) {
+      dispatch(setPatientList({
+        list: data?.data?.list || [],
+        totalPages: data?.data?.totalPages,
+        totalPatients: data?.data?.totalPatients,
+        currentPage: data?.data?.currentPage
+      }));
+    } else {
+      toast({
+        description: message || "Failed to fetch patient list",
+        variant: "destructive"
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    toast({
+      description: "Something went wrong while fetching patients.",
+      variant: "destructive"
+    });
+  } finally {
+    dispatch(setIsLoading(false));
+  }
+};

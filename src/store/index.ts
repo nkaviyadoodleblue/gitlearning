@@ -3,12 +3,15 @@ import authReducer from './authSlice';
 import { client } from '@/lib/client';
 import patientReducer from './patientSlice';
 import caseReducer from './caseSlice';
+import reportReducer from './reportSlice'; 
 
 export const store = configureStore({
     reducer: {
         patient: patientReducer,
         auth: authReducer,
-        case: caseReducer
+        case: caseReducer,
+        report: reportReducer,
+
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

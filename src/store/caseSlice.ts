@@ -165,18 +165,7 @@ export const updateAppointments = ({ appointments, caseId }): AppThunk<void> => 
     //     },
     // attorney: { type: String }, // Added to match CSV
     // dateOfInjury: { type: Date } // Added to match CSV
-    console.log({ appointments, caseId })
-
-    let ap = {
-        "id": 1,
-        "dateOfEntry": "2025-09-17",
-        "status": "Pending",
-        "notes": "Initial consultation - Active case",
-        "typeOfRequest": "without Affidavit",
-        "facilityProvider": "Courtney Stephen",
-        "procedureDate": "2025-07-28",
-        "billAmount": 0
-    }
+    
 
     const normalizedAppointments = appointments.map(item => {
         return {
@@ -185,6 +174,9 @@ export const updateAppointments = ({ appointments, caseId }): AppThunk<void> => 
             currentBalance: item?.billAmount,
             status: item?.status,
             treatmentDetails: item?.notes || "-",
+            typeOfRequest: item?.typeOfRequest,
+            startDate: item?.dateRangeStart,
+            endDate: item?.dateRangeEnd
 
         }
 
