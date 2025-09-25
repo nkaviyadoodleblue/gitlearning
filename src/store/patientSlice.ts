@@ -127,3 +127,40 @@ export const fetchPatients = (): AppThunk => async (dispatch, _getState, client)
     dispatch(setIsLoading(false));
   }
 };
+
+export const uploadPatientFiles = (patientId: string, files: File[]): AppThunk => async (dispatch, _getState, client) => {
+    try {
+    dispatch(setIsLoading(true));
+
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('file', file);
+    });
+
+    const { data, status, message } = await client.post(`/patients/${patientId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (status) {
+      toast({
+        description: "Files uploaded successfully!",
+        variant: "default",
+      });
+      dispatch(getPatientDetails(patientId));
+    } else {
+      toast({
+        description: message || "File upload failed",
+        variant: "destructive",
+      });
+    }
+  } catch (error: any) {
+    toast({
+      description: error?.message || "An error occurred during file upload.",
+      variant: "destructive",
+    });
+  } finally {
+    dispatch(setIsLoading(false));
+  }
+};

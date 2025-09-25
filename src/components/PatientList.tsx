@@ -120,8 +120,9 @@ export const PatientList = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-medical-warning/20 text-medical-warning';
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'active': return 'bg-medical-warning/20 text-medical-warning';
       case 'pending': return 'bg-primary/20 text-primary';
       case 'completed': return 'bg-medical-success/20 text-medical-success';
       default: return 'bg-medical-neutral/20 text-medical-neutral';
@@ -176,8 +177,8 @@ export const PatientList = () => {
                       Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
                     </CardDescription>
                   </div>
-                  <Badge className={getStatusColor(patient.cases?.[0]?.status || 'N/A')}>
-                    {patient.cases?.[0]?.status || 'N/A'}
+                  <Badge className={getStatusColor(patient.caseStatus || 'N/A')}>
+                    {patient.caseStatus || 'N/A'}
                   </Badge>
                 </div>
               </CardHeader>
@@ -211,7 +212,9 @@ export const PatientList = () => {
                     <span className="text-sm font-medium">Providers</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {patient.providersCount} provider{patient.providersCount !== 1 ? 's' : ''}
+                    {patient.providerNames?.length > 0
+                      ? `${patient.providerNames.slice(0, 2).join(', ')}${patient.providerNames.length > 2 ? ', ...' : ''}`
+                      : 'N/A'}
                   </div>
                 </div>
 

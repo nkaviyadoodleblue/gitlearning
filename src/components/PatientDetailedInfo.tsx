@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Layout } from "@/components/Layout";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
-import { getPatientDetails } from "@/store/patientSlice";
+import { getPatientDetails, uploadPatientFiles } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
 import { getAllCaseData } from "@/store/caseSlice";
 
@@ -135,15 +135,26 @@ export const PatientDetailedInfo = () => {
   };
 
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([
-    "medical_records_2024.pdf",
-    "insurance_claim_form.pdf"
+    // "medical_records_2024.pdf",
+    // "insurance_claim_form.pdf"
   ]);
 
+  // const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = Array.from(event.target.files || []);
+  //   const newFiles = files.map(file => file.name);
+  //   setUploadedFiles(prev => [...prev, ...newFiles]);
+  // };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
-    const newFiles = files.map(file => file.name);
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    if (!id || files.length === 0) return;
+
+    dispatch(uploadPatientFiles(id, files));
+
+    const newFileNames = files.map(f => f.name);
+    setUploadedFiles(newFileNames);
+
   };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -258,7 +269,16 @@ export const PatientDetailedInfo = () => {
                     </label>
                   </div>
                 </div>
+
               </div>
+              <div className="uploaded-files-list mt-4">
+                <ul>
+                  {uploadedFiles.map((fileName, index) => (
+                    <li key={index}>{fileName}</li>
+                  ))}
+                </ul>
+              </div>
+
             </div>
           </CardContent>
         </Card>

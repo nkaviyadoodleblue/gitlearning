@@ -127,7 +127,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
       console.log("item?.procedureDate", item?.procedureDate)
       return {
         id: i + 1,
-        dateOfEntry: new Date(item?.createdAt).toISOString().split("T")[0],
+        dateOfEntry:item?.createdAt? new Date(item?.createdAt).toISOString().split("T")[0]: null,
         // dateRangeStart: "2024-01-15",
         // dateRangeEnd: "2024-02-15",
         status: "Pending",
