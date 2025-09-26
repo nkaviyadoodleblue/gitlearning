@@ -164,3 +164,34 @@ export const uploadPatientFiles = (patientId: string, files: File[]): AppThunk =
     dispatch(setIsLoading(false));
   }
 };
+
+export const deletePatientDocument = (patientId: string, filePath: string): AppThunk => 
+  async (dispatch, _getState, client) => {
+    try {
+      dispatch(setIsLoading(true));
+
+      const { data, status, message } = await client.delete(`/patients/${patientId}/document`, undefined,{
+        params: { filePath }
+      });
+
+      if (status) {
+        toast({
+          description: "Document deleted successfully.",
+          variant: "default"
+        });
+        dispatch(getPatientDetails(patientId)); 
+      } else {
+        toast({
+          description: message || "Failed to delete document.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        description: error?.message || "An error occurred while deleting the document.",
+        variant: "destructive"
+      });
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };

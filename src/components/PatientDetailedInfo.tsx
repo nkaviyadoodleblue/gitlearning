@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Upload, FileText, Edit, Eye, Trash2, BarChart3 } from "lucide-react";
+import { ArrowLeft, Upload, FileText, Edit, Eye, Trash2, BarChart3, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Layout } from "@/components/Layout";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
-import { getPatientDetails, uploadPatientFiles } from "@/store/patientSlice";
+import { deletePatientDocument, getPatientDetails, uploadPatientFiles } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
 import { getAllCaseData } from "@/store/caseSlice";
 
@@ -42,6 +42,7 @@ export const PatientDetailedInfo = () => {
   const { patientDetails = {}, caseDetails, appointmentHistory } = useAppSelector(state => state.patient.patientDetails) || {};
   const { list: caseList } = useAppSelector(state => state.case.caseList) || {};
   const { id } = useParams<{ id: string }>();
+  const uploadedFiles = patientDetails?.uploadedDocuments || [];
 
   const onNavigate = (page: string, id = null) => {
     let url = `/${page}`;
@@ -134,10 +135,10 @@ export const PatientDetailedInfo = () => {
     return originalBalance * (1 - (completedSteps * 0.1));
   };
 
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([
-    // "medical_records_2024.pdf",
-    // "insurance_claim_form.pdf"
-  ]);
+  // const [uploadedFiles, setUploadedFiles] = useState<string[]>([
+  //   // "medical_records_2024.pdf",
+  //   // "insurance_claim_form.pdf"
+  // ]);
 
   // const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
   //   const files = Array.from(event.target.files || []);
@@ -149,12 +150,12 @@ export const PatientDetailedInfo = () => {
     if (!id || files.length === 0) return;
 
     dispatch(uploadPatientFiles(id, files));
-
-    const newFileNames = files.map(f => f.name);
-    setUploadedFiles(newFileNames);
-
   };
 
+  const handleDeleteFile = (filePath: string) => {
+    if (!id) return;
+    dispatch(deletePatientDocument(id, filePath));
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -272,11 +273,44 @@ export const PatientDetailedInfo = () => {
 
               </div>
               <div className="uploaded-files-list mt-4">
-                <ul>
-                  {uploadedFiles.map((fileName, index) => (
-                    <li key={index}>{fileName}</li>
-                  ))}
+                <h3 className="font-semibold mb-2">Uploaded Documents</h3>
+                <ul className="space-y-2">
+                  {uploadedFiles.map((filePath, index) => {
+                    const normalizedPath = filePath.replace(/\\/g, "/");
+                    const match = normalizedPath.match(/images\/(.+)$/);
+                    const relativePath = match ? match[1] : "";
+                   
+                    const fileUrl = `/uploads/${normalizedPath}`;
+
+                    const fileName = relativePath.split("/").pop();
+
+                    // const isImage = /\.(jpg|jpeg|png)$/i.test(fileName || "");
+
+                    return (
+                      <li key={index} className="flex items-center justify-between border p-2 rounded-md bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          {/* {isImage ? (
+                            <img src={fileUrl} alt={fileName} className="w-10 h-10 object-cover rounded-md" />
+                          ) : (
+                            <FileText className="text-medical-muted" />
+                          )} */}
+                          <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-medical-primary underline">
+                            {fileName}
+                          </a>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-medical-danger hover:text-medical-danger/80"
+                          onClick={() => handleDeleteFile(filePath)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    );
+                  })}
                 </ul>
+
               </div>
 
             </div>
