@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 import { deleteLocalStorage, getLocalStorage } from "./storage";
 
 // Create Axios instance
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
     baseURL: env.apiBaseUrl,
 });
 
