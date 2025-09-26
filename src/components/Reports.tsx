@@ -25,6 +25,7 @@ import { useSelector } from "react-redux";
 import { downloadPatientReport, fetchPatientReport } from "@/store/reportSlice";
 import { useAppSelector } from "@/hooks/use-selector";
 import { Progress } from "@radix-ui/react-progress";
+import { useNavigate } from "react-router-dom";
 
 interface ReportsProps {
   onNavigate: (page: string) => void;
@@ -45,7 +46,7 @@ export const Reports = ({ onNavigate }: ReportsProps) => {
   const [selectedPatient, setSelectedPatient] = useState<string>("");
   const [isDownloading, setIsDownloading] = useState(false);
   const dispatch = useAppDispatch();
-
+  const navigate = useNavigate();
   const reportData = useAppSelector((state: any) => state.report?.reportData || null);
   const isLoading = useSelector((state: any) => state.report?.isLoading || false);
   const patientList = useAppSelector((state: any) => state.patient.patientList.list);
@@ -86,14 +87,14 @@ export const Reports = ({ onNavigate }: ReportsProps) => {
 
 
   return (
-    <Layout title="Patient Reports" onNavigate={onNavigate}>
+    <Layout title="Patient Reports">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onNavigate("dashboard")}
+            onClick={() => navigate("/dashboard")}
             className="gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -185,6 +186,7 @@ export const Reports = ({ onNavigate }: ReportsProps) => {
                         <th className="border border-gray-300 px-4 py-2 text-left">Date</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">Current Balance</th>
                         <th className="border border-gray-300 px-4 py-2 text-right">Final Balance</th>
+                        <th className="border border-gray-300 px-4 py-2 text-right">Total Savings</th>
                         <th className="border border-gray-300 px-4 py-2 text-left">Status</th>
                         <th className="border border-gray-300 px-4 py-2 text-left">Case Progress</th>
                       </tr>
@@ -200,6 +202,7 @@ export const Reports = ({ onNavigate }: ReportsProps) => {
                           <td className="border border-gray-300 px-4 py-2">{appointment.appointmentDate}</td>
                           <td className="border border-gray-300 px-4 py-2 text-right">${appointment.currentBalance}</td>
                           <td className="border border-gray-300 px-4 py-2 text-right">${appointment.finalBalance}</td>
+                          <td className="border border-gray-300 px-4 py-2 text-right">${appointment.totalSavings}</td>
                           <td className="border border-gray-300 px-4 py-2">
                             <Badge
                               variant={appointment.appointmentStatus === "Completed" ? "default" : "secondary"}
