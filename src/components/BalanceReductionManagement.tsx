@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, ChevronDown, ChevronUp, CheckCircle, Clock, FileText, DollarSign, Calendar, Lock } from "lucide-react";
+import { ArrowLeft, Plus, ChevronDown, ChevronUp, CheckCircle, Clock, FileText, DollarSign, Calendar, Lock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -13,6 +13,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCaseData, updateAppointments, updateCaseStep } from "@/store/caseSlice";
 import { useAppDispatch } from "@/hooks/use-dispatch";
 import { useAppSelector } from "@/hooks/use-selector";
+import { toast } from "@/hooks/use-toast";
 
 interface BalanceReductionManagementProps {
   onNavigate: (page: string, appointmentId?: string) => void;
@@ -39,6 +40,7 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
   const dispatch = useAppDispatch();
   const { id } = useParams<{ id: string }>();
   const caseData = useAppSelector(state => state.case.caseData)
+  const [errors, setErrors] = useState<{ [rowId: string]: { [field: string]: string } }>({});
 
   // Load progress from localStorage on component mount
   // useEffect(() => {
@@ -294,19 +296,93 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
     setAppointmentHistory([...appointmentHistory, newRow]);
   };
 
+  const clearError = (rowId: string, field: string) => {
+    setErrors(prev => {
+      const updatedRowErrors = { ...prev[rowId] };
+      delete updatedRowErrors[field];
+
+      if (Object.keys(updatedRowErrors).length === 0) {
+        const newErrors = { ...prev };
+        delete newErrors[rowId];
+        return newErrors;
+      }
+
+      return {
+        ...prev,
+        [rowId]: updatedRowErrors,
+      };
+    });
+  };
+
+
+
+  const validateAppointments = () => {
+    const newErrors: { [rowId: string]: { [field: string]: string } } = {};
+    appointmentHistory.forEach((row) => {
+      if (!row) return;
+      const rowErrors: { [field: string]: string } = {};
+      if (!row.dateOfEntry) rowErrors.dateOfEntry = "Date of Entry is required";
+      if (!row.status) rowErrors.status = "Status is required";
+      if (!row.typeOfRequest) rowErrors.typeOfRequest = "Type of Request is required";
+      if (!row.facilityProvider) rowErrors.facilityProvider = "Facility/Provider is required";
+      if (!row.procedureDate) rowErrors.procedureDate = "Procedure Date is required";
+      if (!row.dateRangeStart) rowErrors.dateRangeStart = "Start Date is required";
+      if (!row.dateRangeEnd) rowErrors.dateRangeEnd = "End Date is required";
+
+
+      if (Object.keys(rowErrors).length > 0) {
+        newErrors[row.id] = rowErrors;
+      }
+    });
+   
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+
+
+
   const updateRow = (id: string, field: string, value: any) => {
     setAppointmentHistory(prev =>
       prev.map(row => row.id === id ? { ...row, [field]: value } : row)
     );
+    clearError(id, field);
   };
-
   const handleUpdate = () => {
-    console.log("appointmentHistory",appointmentHistory)
+
+    const isValid = validateAppointments();
+
+    if (!isValid) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the highlighted errors before updating.",
+        variant: "destructive",
+        duration: 4000
+      });
+      return;
+    }
+
+
+    setErrors({});
+
+
     dispatch(updateAppointments({
       caseId: id,
       appointments: appointmentHistory
-    }))
-  }
+    }));
+
+    toast({
+      title: "Updated Successfully",
+      description: "Appointment history updated.",
+      variant: "default",
+      duration: 3000
+    });
+  };
+
+
+
 
   return (
     <Layout title="Balance Reduction Management" >
@@ -396,16 +472,22 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                           type="date"
                           value={row.dateOfEntry}
                           disabled={caseData?.status != "Active"}
-                          onChange={(e) => updateRow(row.id, "dateOfEntry", e.target.value)}
-                          className="border-medical-border"
+                          onChange={(e) => {
+                            updateRow(row.id, "dateOfEntry", e.target.value);
+                            clearError(row.id, "dateOfEntry");
+                          }}
+                          className={`border ${errors[row.id]?.dateOfEntry ? "border-red-500" : "border-medical-border"}`}
                         />
                       </TableCell>
                       <TableCell>
                         <Select value={row.status}
 
                           disabled={caseData?.status != "Active"}
-                          onValueChange={(value) => updateRow(row.id, "status", value)}>
-                          <SelectTrigger className="border-medical-border">
+                          onValueChange={(value) => {
+                            updateRow(row.id, "status", value);
+                            clearError(row.id, "status");
+                          }}>
+                          <SelectTrigger className={`border ${errors[row.id]?.status ? "border-red-500" : "border-medical-border"}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -428,8 +510,12 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
                         <Select
 
                           disabled={caseData?.status != "Active"}
-                          value={row.typeOfRequest} onValueChange={(value) => updateRow(row.id, "typeOfRequest", value)}>
-                          <SelectTrigger className="border-medical-border">
+                          value={row.typeOfRequest}
+                          onValueChange={(value) => {
+                            updateRow(row.id, "typeOfRequest", value);
+                            clearError(row.id, "typeOfRequest");
+                          }}>
+                          <SelectTrigger className={`border ${errors[row.id]?.typeOfRequest ? "border-red-500" : "border-medical-border"}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -456,8 +542,11 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
 
                           disabled={caseData?.status != "Active"}
                           value={row.facilityProvider}
-                          onChange={(e) => updateRow(row.id, "facilityProvider", e.target.value)}
-                          className="border-medical-border"
+                          onChange={(e) => {
+                            updateRow(row.id, "facilityProvider", e.target.value);
+                            clearError(row.id, "facilityProvider");
+                          }}
+                          className={`border ${errors[row.id]?.facilityProvider ? "border-red-500" : "border-medical-border"}`}
                           placeholder="Provider name"
                         // step="0.01"
                         />
@@ -468,8 +557,11 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
 
                           disabled={caseData?.status != "Active"}
                           value={row.procedureDate}
-                          onChange={(e) => updateRow(row.id, "procedureDate", e.target.value)}
-                          className="border-medical-border"
+                          onChange={(e) => {
+                            updateRow(row.id, "procedureDate", e.target.value);
+                            clearError(row.id, "procedureDate");
+                          }}
+                          className={`border ${errors[row.id]?.procedureDate ? "border-red-500" : "border-medical-border"}`}
                         />
                       </TableCell>
                       <TableCell>
@@ -493,8 +585,11 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
 
                               disabled={caseData?.status != "Active"}
                               value={row.dateRangeStart}
-                              onChange={(e) => updateRow(row.id, "dateRangeStart", e.target.value)}
-                              className="border-medical-border"
+                              onChange={(e) => {
+                                updateRow(row.id, "dateRangeStart", e.target.value);
+                                clearError(row.id, "dateRangeStart");
+                              }}
+                              className={`border ${errors[row.id]?.dateRangeStart ? "border-red-500" : "border-medical-border"}`}
                             />
                           </div>
                           <div className="flex-1">
@@ -504,11 +599,23 @@ export const BalanceReductionManagement = ({ onNavigate, appointmentId }: Balanc
 
                               disabled={caseData?.status != "Active"}
                               value={row.dateRangeEnd}
-                              onChange={(e) => updateRow(row.id, "dateRangeEnd", e.target.value)}
-                              className="border-medical-border"
+                              onChange={(e) => {
+                                updateRow(row.id, "dateRangeEnd", e.target.value);
+                                clearError(row.id, "dateRangeEnd");
+                              }}
+                              className={`border ${errors[row.id]?.dateRangeEnd ? "border-red-500" : "border-medical-border"}`}
                             />
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-medical-danger hover:text-medical-danger/80"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

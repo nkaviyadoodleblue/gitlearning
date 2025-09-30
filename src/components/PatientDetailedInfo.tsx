@@ -302,7 +302,11 @@ export const PatientDetailedInfo = () => {
                           variant="ghost"
                           size="sm"
                           className="text-medical-danger hover:text-medical-danger/80"
-                          onClick={() => handleDeleteFile(filePath)}
+                          onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this file?")) {
+                            handleDeleteFile(filePath)
+                            }
+                          }}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -400,20 +404,20 @@ export const PatientDetailedInfo = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-medical-info hover:text-medical-info/80"
                         >
                           <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
+                        </Button> */}
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 text-medical-danger hover:text-medical-danger/80"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>

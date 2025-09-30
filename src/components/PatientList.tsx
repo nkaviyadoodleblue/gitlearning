@@ -84,6 +84,8 @@ export const PatientList = () => {
   console.log({
     patientData
   })
+  const isLoading = useAppSelector(state => state.patient.isLoading);
+
   const [searchTerm, setSearchTerm] = useState("");
   const { summary } = useAppSelector(state => state.case);
   // useEffect(() => {
@@ -163,130 +165,137 @@ export const PatientList = () => {
         </div>
 
         {/* Patients Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <span className="text-lg font-medium text-muted-foreground">Loading...</span>
+          </div>
+        ):(
+          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-          {patientList.map((patient) => (
-            <Card key={patient?._id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {patient?.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
-                    </CardDescription>
-                  </div>
-                  <Badge className={getStatusColor(patient.caseStatus || 'N/A')}>
-                    {patient.caseStatus || 'N/A'}
-                  </Badge>
+        {patientList.map((patient) => (
+          <Card key={patient?._id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                    {patient?.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
+                  </CardDescription>
                 </div>
-              </CardHeader>
+                <Badge className={getStatusColor(patient.caseStatus || 'N/A')}>
+                  {patient.caseStatus || 'N/A'}
+                </Badge>
+              </div>
+            </CardHeader>
 
-              <CardContent className="space-y-4">
-                {/* Patient Details */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">DOB:</span>
-                  </div>
-                  <span className="font-medium">{new Date(patient.dob).toLocaleDateString()}</span>
-
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Gender:</span>
-                  </div>
-                  <span className="font-medium">{"Male"}</span>
-
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Registered:</span>
-                  </div>
-                  <span className="font-medium">{new Date(patient.registrationDate).toLocaleDateString()}</span>
+            <CardContent className="space-y-4">
+              {/* Patient Details */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">DOB:</span>
                 </div>
+                <span className="font-medium">{new Date(patient.dob).toLocaleDateString()}</span>
 
-                {/* Provider Info */}
-                <div className="bg-accent/30 rounded-lg p-3">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Providers</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {patient.providerNames?.length > 0
-                      ? `${patient.providerNames.slice(0, 2).join(', ')}${patient.providerNames.length > 2 ? ', ...' : ''}`
-                      : 'N/A'}
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Gender:</span>
                 </div>
+                <span className="font-medium">{"Male"}</span>
 
-                {/* Action Button */}
-                <Button
-                  variant="outline"
-                  className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
-                  onClick={() => navigate(`/patients/${patient._id}`)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Registered:</span>
+                </div>
+                <span className="font-medium">{new Date(patient.registrationDate).toLocaleDateString()}</span>
+              </div>
 
-        </div>
+              {/* Provider Info */}
+              <div className="bg-accent/30 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Providers</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {patient.providerNames?.length > 0
+                    ? `${patient.providerNames.slice(0, 2).join(', ')}${patient.providerNames.length > 2 ? ', ...' : ''}`
+                    : 'N/A'}
+                </div>
+              </div>
 
-        <div>
-          <Pagination
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            pageCount={totalPages}  // Assuming 2 patients per page
-          />
-        </div>
-
-        {/* Empty State */}
-        {patientList.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No patients found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ? "Try adjusting your search criteria" : "Import a CSV file to get started"}
-              </p>
-              <Button variant="medical" onClick={() => onNavigate("import")}>
-                <Upload className="h-4 w-4 mr-2" />
-                Import Patient Data
+              {/* Action Button */}
+              <Button
+                variant="outline"
+                className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
+                onClick={() => navigate(`/patients/${patient._id}`)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
               </Button>
             </CardContent>
           </Card>
-        )}
+        ))}
 
-        {/* Summary Stats */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Patient Summary</CardTitle>
-          </CardHeader>
+      </div>
+
+      <div>
+        <Pagination
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          pageCount={totalPages}  // Assuming 2 patients per page
+        />
+      </div>
+</>
+        )}
+      {/* Empty State */}
+      {patientList.length === 0 && !isLoading && (
+        <Card className="text-center py-12">
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
-                <div className="text-sm text-muted-foreground">Total Patients</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-medical-warning">
-                  {/* {patientList.filter(p => p.status === 'active').length} */}
-                  {summary?.activeCases || 0}
-                </div>
-                <div className="text-sm text-muted-foreground">Active Cases</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-medical-success">
-                  {/* {patientList.filter(p => p.status === 'completed').length} */}
-                  {summary?.completed || 0}
-                </div>
-                <div className="text-sm text-muted-foreground">Completed</div>
-              </div>
-            </div>
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No patients found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm ? "Try adjusting your search criteria" : "Import a CSV file to get started"}
+            </p>
+            {/* <Button variant="medical" onClick={() => onNavigate("import")}>
+                <Upload className="h-4 w-4 mr-2" />
+                Import Patient Data
+              </Button> */}
           </CardContent>
         </Card>
-      </div>
-    </Layout>
+      )}
+
+      {/* Summary Stats */}
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle>Patient Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
+              <div className="text-sm text-muted-foreground">Total Patients</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-medical-warning">
+                {/* {patientList.filter(p => p.status === 'active').length} */}
+                {summary?.activeCases || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Active Cases</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-medical-success">
+                {/* {patientList.filter(p => p.status === 'completed').length} */}
+                {summary?.completed || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Completed</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+    </Layout >
   );
 };
