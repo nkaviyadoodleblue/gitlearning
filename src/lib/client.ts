@@ -3,7 +3,7 @@ import { env } from "@/config/env";
 import { deleteLocalStorage, getLocalStorage } from "./storage";
 
 // Create Axios instance
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
     baseURL: env.apiBaseUrl,
 });
 
@@ -72,11 +72,12 @@ export async function client(
         };
     } catch (err: any) {
         console.log("first,", err);
-        // if (err?.request?.status === 401) {
-        //     const redirectURL = (location.pathname?.includes("telecaller")) ? "/telecaller/login" : "/login";
-        //     deleteLocalStorage("token");
-        //     document.location.href = redirectURL;
-        // }
+        if (err?.request?.status === 401) {
+            // const redirectURL = (location.pathname?.includes("telecaller")) ? "/telecaller/login" : "/login";
+            deleteLocalStorage("token");
+            deleteLocalStorage("username");
+            document.location.href = "/";
+        }
         return {
             status: false,
             data: err?.response?.data || null,

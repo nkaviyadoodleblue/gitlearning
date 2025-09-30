@@ -6,14 +6,24 @@ import { deleteLocalStorage, getLocalStorage, setLocalStorage } from '@/lib/stor
 import { set } from 'date-fns';
 
 export interface PatientState {
-    patientList: any[];
+    patientList: {
+        list: any[];
+        totalPages: number;
+        totalPatients: number;
+        currentPage: number;
+    };
     isLoading: boolean;
     patientDetails: any | null;
     isPatientDetailsLoading: boolean;
 }
 
 const initialState: PatientState = {
-    patientList: [],
+    patientList: {
+        list: [],
+        totalPages: 0,
+        totalPatients: 0,
+        currentPage: 0
+    },
     isLoading: false,
     patientDetails: null,
     isPatientDetailsLoading: false,
@@ -43,12 +53,23 @@ export const { setPatientList, setIsLoading, setPatientDetails, setIsPatientDeta
 
 export default patientSlice.reducer;
 
-export const getPatientData = (): AppThunk<boolean> => async (dispatch, _getState, client) => {
+export const getPatientData = ({ page = 1, limit = 10, search = "" }): AppThunk<boolean> => async (dispatch, _getState, client) => {
     dispatch(setIsLoading(true))
-    const { data, message, status } = await client.get("/patients");
+    // const { data, message, status } = await client.get("/patients?page=" + (page || 1) + "&limit=" + limit);
+//     const { data, message, status } = await client.get(
+//     `/patients?page=${page || 1}&limit=${limit}&search=${encodeURIComponent(search)}`
+//   );
+const query = `/patients?page=${page || 1}&limit=${limit}` + (search ? `&search=${encodeURIComponent(search)}` : '');
+
+const { data, message, status } = await client.get(query);
+
     if (status) {
-        console.log(data?.data)
-        dispatch(setPatientList(data?.data || []))
+        dispatch(setPatientList({
+            list: data?.data.list,
+            currentPage: data?.data.currentPage,
+            totalPages: data?.data.totalPages,
+            totalPatients: data?.data.totalPatients
+        }))
     } else {
         toast({
             description: message || "Failed to fetch patient data",
@@ -62,7 +83,7 @@ export const getPatientData = (): AppThunk<boolean> => async (dispatch, _getStat
 
 export const getPatientDetails = (id: string): AppThunk<boolean> => async (dispatch, _getState, client) => {
     dispatch(setIsPatientDetailsLoading(true))
-    const { data, message, status } = await client.get("/patients/" + id);
+    const { data, message, status } = await client.get("/patients/details/" + id);
     if (status) {
         console.log(data?.data)
         dispatch(setPatientDetails(data?.data))
@@ -75,3 +96,102 @@ export const getPatientDetails = (id: string): AppThunk<boolean> => async (dispa
     dispatch(setIsPatientDetailsLoading(false))
     return status;
 };
+
+
+
+export const fetchPatients = (): AppThunk => async (dispatch, _getState, client) => {
+  try {
+    dispatch(setIsLoading(true));
+    const { data, status, message } = await client.get("/patients?page=1&limit=1000");
+
+    if (status) {
+      dispatch(setPatientList({
+        list: data?.data?.list || [],
+        totalPages: data?.data?.totalPages,
+        totalPatients: data?.data?.totalPatients,
+        currentPage: data?.data?.currentPage
+      }));
+    } else {
+      toast({
+        description: message || "Failed to fetch patient list",
+        variant: "destructive"
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching patients:", error);
+    toast({
+      description: "Something went wrong while fetching patients.",
+      variant: "destructive"
+    });
+  } finally {
+    dispatch(setIsLoading(false));
+  }
+};
+
+export const uploadPatientFiles = (patientId: string, files: File[]): AppThunk => async (dispatch, _getState, client) => {
+    try {
+    dispatch(setIsLoading(true));
+
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('file', file);
+    });
+
+    const { data, status, message } = await client.post(`/patients/${patientId}/upload`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+
+    if (status) {
+      toast({
+        description: "Files uploaded successfully!",
+        variant: "default",
+      });
+      dispatch(getPatientDetails(patientId));
+    } else {
+      toast({
+        description: message || "File upload failed",
+        variant: "destructive",
+      });
+    }
+  } catch (error: any) {
+    toast({
+      description: error?.message || "An error occurred during file upload.",
+      variant: "destructive",
+    });
+  } finally {
+    dispatch(setIsLoading(false));
+  }
+};
+
+export const deletePatientDocument = (patientId: string, filePath: string): AppThunk => 
+  async (dispatch, _getState, client) => {
+    try {
+      dispatch(setIsLoading(true));
+
+      const { data, status, message } = await client.delete(`/patients/${patientId}/document`, undefined,{
+        params: { filePath }
+      });
+
+      if (status) {
+        toast({
+          description: "Document deleted successfully.",
+          variant: "default"
+        });
+        dispatch(getPatientDetails(patientId)); 
+      } else {
+        toast({
+          description: message || "Failed to delete document.",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        description: error?.message || "An error occurred while deleting the document.",
+        variant: "destructive"
+      });
+    } finally {
+      dispatch(setIsLoading(false));
+    }
+  };

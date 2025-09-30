@@ -17,6 +17,9 @@ import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "@/hooks/use-dispatch";
 import { getPatientData } from "@/store/patientSlice";
 import { useAppSelector } from "@/hooks/use-selector";
+import { Pagination } from "./common/Pagination";
+import { getCaseSummary } from "@/store/caseSlice";
+
 
 interface Patient {
   id: string;
@@ -30,8 +33,6 @@ interface Patient {
 }
 
 export const PatientList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-
   // Sample data - in real app this would come from CSV import/API
   // const [patients] = useState<Patient[]>([
   //   {
@@ -78,12 +79,30 @@ export const PatientList = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const patientList = useAppSelector(state => state?.patient.patientList);
+  const patientData = useAppSelector(state => state?.patient.patientList);
+  const { list: patientList, totalPages, totalPatients, currentPage } = patientData;
+  console.log({
+    patientData
+  })
+  const isLoading = useAppSelector(state => state.patient.isLoading);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const { summary } = useAppSelector(state => state.case);
+  // useEffect(() => {
+  //   dispatch(getPatientData({ page: currentPage,search: searchTerm  }))
+  // }, [currentPage,searchTerm])
 
   useEffect(() => {
-    dispatch(getPatientData())
-  }, [])
+    dispatch(getCaseSummary());
+  }, [dispatch]);
 
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      dispatch(getPatientData({ page: currentPage, search: searchTerm }));
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [searchTerm, currentPage, dispatch]);
 
   const onNavigate = (page, id = null) => {
     let url = `/${page}`;
@@ -91,14 +110,21 @@ export const PatientList = () => {
     navigate(url)
   }
 
-  const filteredPatients = patientList.filter(patient =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredPatients = patientList.filter(patient =>
+  //   patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //   patient.caseNumber.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+
+  const handlePageChange = (page: number) => {
+    console.log(page, "pp")
+    dispatch(getPatientData({ page: page }))
+    // Fetch new data based on the page number
+  };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-medical-warning/20 text-medical-warning';
+    const normalizedStatus = status.toLowerCase();
+    switch (normalizedStatus) {
+      case 'active': return 'bg-medical-warning/20 text-medical-warning';
       case 'pending': return 'bg-primary/20 text-primary';
       case 'completed': return 'bg-medical-success/20 text-medical-success';
       default: return 'bg-medical-neutral/20 text-medical-neutral';
@@ -113,7 +139,7 @@ export const PatientList = () => {
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
-              onClick={() => onNavigate("dashboard")}
+              onClick={() => navigate("/dashboard")}
               className="text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -131,125 +157,145 @@ export const PatientList = () => {
                 className="pl-10 w-full sm:w-80"
               />
             </div>
-            <Button variant="medical" onClick={() => onNavigate("import")}>
+            {/* <Button variant="medical" onClick={() => onNavigate("import")}>
               <Upload className="h-4 w-4 mr-2" />
               Import CSV
-            </Button>
+            </Button> */}
           </div>
         </div>
 
         {/* Patients Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {isLoading ? (
+          <div className="flex justify-center items-center py-10">
+            <span className="text-lg font-medium text-muted-foreground">Loading...</span>
+          </div>
+        ):(
+          <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-          {patientList.map((patient) => (
-            <Card key={patient?._id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                      {patient?.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
-                    </CardDescription>
-                  </div>
-                  <Badge className={getStatusColor(patient.cases?.[0]?.status || 'N/A')}>
-                    {patient.cases?.[0]?.status || 'N/A'}
-                  </Badge>
+        {patientList.map((patient) => (
+          <Card key={patient?._id} className="shadow-card hover:shadow-elegant transition-all duration-300 group">
+            <CardHeader className="pb-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                    {patient?.name}
+                  </CardTitle>
+                  <CardDescription className="mt-1">
+                    Case: {patient.cases?.[0]?.caseNumber || 'N/A'}
+                  </CardDescription>
                 </div>
-              </CardHeader>
+                <Badge className={getStatusColor(patient.caseStatus || 'N/A')}>
+                  {patient.caseStatus || 'N/A'}
+                </Badge>
+              </div>
+            </CardHeader>
 
-              <CardContent className="space-y-4">
-                {/* Patient Details */}
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">DOB:</span>
-                  </div>
-                  <span className="font-medium">{new Date(patient.dob).toLocaleDateString()}</span>
-
-                  <div className="flex items-center space-x-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Gender:</span>
-                  </div>
-                  <span className="font-medium">{patient.gender}</span>
-
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">Registered:</span>
-                  </div>
-                  <span className="font-medium">{new Date(patient.registrationDate).toLocaleDateString()}</span>
+            <CardContent className="space-y-4">
+              {/* Patient Details */}
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">DOB:</span>
                 </div>
+                <span className="font-medium">{new Date(patient.dob).toLocaleDateString()}</span>
 
-                {/* Provider Info */}
-                <div className="bg-accent/30 rounded-lg p-3">
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Providers</span>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    {patient.providersCount} provider{patient.providersCount !== 1 ? 's' : ''}
-                  </div>
+                <div className="flex items-center space-x-2">
+                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Gender:</span>
                 </div>
+                <span className="font-medium">{"Male"}</span>
 
-                {/* Action Button */}
-                <Button
-                  variant="outline"
-                  className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
-                  onClick={() => navigate(`/patients/${patient._id}`)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Details
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">Registered:</span>
+                </div>
+                <span className="font-medium">{new Date(patient.registrationDate).toLocaleDateString()}</span>
+              </div>
 
-        {/* Empty State */}
-        {patientList.length === 0 && (
-          <Card className="text-center py-12">
-            <CardContent>
-              <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No patients found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ? "Try adjusting your search criteria" : "Import a CSV file to get started"}
-              </p>
-              <Button variant="medical" onClick={() => onNavigate("import")}>
-                <Upload className="h-4 w-4 mr-2" />
-                Import Patient Data
+              {/* Provider Info */}
+              <div className="bg-accent/30 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Users className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Providers</span>
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {patient.providerNames?.length > 0
+                    ? `${patient.providerNames.slice(0, 2).join(', ')}${patient.providerNames.length > 2 ? ', ...' : ''}`
+                    : 'N/A'}
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <Button
+                variant="outline"
+                className="w-full group-hover:border-primary group-hover:text-primary transition-colors"
+                onClick={() => navigate(`/patients/${patient._id}`)}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
               </Button>
             </CardContent>
           </Card>
-        )}
+        ))}
 
-        {/* Summary Stats */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle>Patient Summary</CardTitle>
-          </CardHeader>
+      </div>
+
+      <div>
+        <Pagination
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          pageCount={totalPages}  // Assuming 2 patients per page
+        />
+      </div>
+</>
+        )}
+      {/* Empty State */}
+      {patientList.length === 0 && !isLoading && (
+        <Card className="text-center py-12">
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">{patientList.length}</div>
-                <div className="text-sm text-muted-foreground">Total Patients</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-medical-warning">
-                  {patientList.filter(p => p.status === 'active').length}
-                </div>
-                <div className="text-sm text-muted-foreground">Active Cases</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-medical-success">
-                  {patientList.filter(p => p.status === 'completed').length}
-                </div>
-                <div className="text-sm text-muted-foreground">Completed</div>
-              </div>
-            </div>
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No patients found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm ? "Try adjusting your search criteria" : "Import a CSV file to get started"}
+            </p>
+            {/* <Button variant="medical" onClick={() => onNavigate("import")}>
+                <Upload className="h-4 w-4 mr-2" />
+                Import Patient Data
+              </Button> */}
           </CardContent>
         </Card>
-      </div>
-    </Layout>
+      )}
+
+      {/* Summary Stats */}
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle>Patient Summary</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{summary?.totalPatients || 0}</div>
+              <div className="text-sm text-muted-foreground">Total Patients</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-medical-warning">
+                {/* {patientList.filter(p => p.status === 'active').length} */}
+                {summary?.activeCases || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Active Cases</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-medical-success">
+                {/* {patientList.filter(p => p.status === 'completed').length} */}
+                {summary?.completed || 0}
+              </div>
+              <div className="text-sm text-muted-foreground">Completed</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+    </Layout >
   );
 };
