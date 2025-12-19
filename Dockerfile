@@ -5,7 +5,8 @@ RUN npm install
 COPY . .
 RUN npm run build
 EXPOSE 80
-CMD ["nginx", "-g", "demon off;"]
+CMD ["npm", "run", "dev;"]
+
 
 
 
