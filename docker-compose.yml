@@ -1,0 +1,12 @@
+version: '3.8'
+
+service:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gitim:latest
+    ports:
+      -  "5000:3020"
+    restart: unless-stoped
+    
