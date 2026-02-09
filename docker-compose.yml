@@ -6,5 +6,5 @@ services:
     image: gitim:latest
     ports:
       -  "5000:3020"
-    restart: unless-stoped
+    restart: unless-stopped
     
