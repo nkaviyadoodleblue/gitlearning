@@ -1,6 +1,6 @@
 version: '3.8'
 
-service:
+services:
   frontend:
     build:
       context: .
