@@ -1,10 +1,10 @@
 version: '3.8'
 
-service:
+services:
   app:
-    image: asia-south1-docker.pkg.dev/noorg-486511/docker-image-repo/gitim:${IMAGE_TAG}
+    image: asia-south1-docker.pkg.dev/noorg-486511/docker-image-repo/gitim:${BUILD_NUMBER}
     container_name: gitcon
     ports:
       -  "5000:3020"
-    restart: unless-stoped
+    restart: unless-stopped
     
