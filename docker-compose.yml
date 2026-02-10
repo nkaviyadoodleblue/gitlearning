@@ -2,8 +2,8 @@ version: '3.8'
 
 service:
   app:
-    image: asia-south1-docker.pkg.dev/noorg-486511/docker-image-repo
-    containre_name: gitcon
+    image: asia-south1-docker.pkg.dev/noorg-486511/docker-image-repo/gitim:latest
+    container_name: gitcon
     ports:
       -  "5000:3020"
     restart: unless-stoped
