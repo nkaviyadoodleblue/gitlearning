@@ -1,11 +1,9 @@
 version: '3.8'
 
 service:
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: gitim:latest
+  app:
+    image: asia-south1-docker.pkg.dev/noorg-486511/docker-image-repo
+    containre_name: gitcon
     ports:
       -  "5000:3020"
     restart: unless-stoped
